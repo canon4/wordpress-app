@@ -1,0 +1,6 @@
+.wcfm_product_manager_gallery_fields .wcfm_scfw_prod_chart .select2-selection__choice {
+    white-space: normal;
+}
+.wcfm_product_manager_gallery_fields .wcfm_scfw_prod_chart.select2-selection--multiple::after {
+    border: none;
+}

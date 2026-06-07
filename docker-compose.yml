@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  wordpress:
+    build: .
+    container_name: wordpress_app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: ${DB_HOST}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Themes: bind mount — el repo del tema hace git pull aquí directamente
+      - /srv/wordpress/themes:/var/www/html/wp-content/themes
+      # Uploads: volumen Docker — media de usuarios, nunca en repo
+      - wp_uploads:/var/www/html/wp-content/uploads
+    networks:
+      - red_global
+
+volumes:
+  wp_uploads:
+
+networks:
+  red_global:
+    external: true

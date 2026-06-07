@@ -1,0 +1,49 @@
+# ── Secretos ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── WordPress core (lo provee la imagen Docker) ───────
+wp-admin/
+wp-includes/
+index.php
+license.txt
+readme.html
+xmlrpc.php
+wp-activate.php
+wp-blog-header.php
+wp-comments-post.php
+wp-cron.php
+wp-links-opml.php
+wp-load.php
+wp-login.php
+wp-mail.php
+wp-settings.php
+wp-signup.php
+wp-trackback.php
+
+# ── wp-content: sólo lo custom entra al repo ─────────
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+
+# Themes: repo separado con su propio CI/CD
+wp-content/themes/
+
+# ── Archivos de debug / scripts temporales ───────────
+debug.log
+wp-content/debug.log
+debug-*.php
+fix-*.php
+flush-*.php
+*.ps1
+*.sql
+
+# ── Herramientas locales ──────────────────────────────
+wp-cli.phar
+
+# ── Archivos locales basura ───────────────────────────
+*.rar
+*.zip
+CUserscanon*.txt

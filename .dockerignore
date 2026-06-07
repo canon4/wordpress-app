@@ -1,0 +1,7 @@
+.git
+.env
+*.ps1
+*.sql
+docker-compose.yml
+wp-content/cache
+wp-content/upgrade
