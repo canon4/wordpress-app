@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   wordpress:
@@ -6,7 +6,7 @@ services:
     container_name: wordpress_app
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "81:80"
     environment:
       WORDPRESS_DB_HOST: ${DB_HOST}
       WORDPRESS_DB_NAME: ${DB_NAME}
