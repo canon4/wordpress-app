@@ -89,7 +89,10 @@ define( 'WP_DEBUG', false );
 
 /* Add any custom values between this line and the "stop editing" line. */
 
-
+if ( getenv('WP_HOME') ) {
+    define( 'WP_HOME',    getenv('WP_HOME') );
+    define( 'WP_SITEURL', getenv('WP_SITEURL') ?: getenv('WP_HOME') );
+}
 
 /* That's all, stop editing! Happy publishing. */
 

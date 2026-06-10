@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+wp-config-local.php
 
 # ── WordPress core (lo provee la imagen Docker) ───────
 wp-admin/
