@@ -1,10 +1,47 @@
-FROM wordpress:latest
+FROM php:8.2-apache
 
-# Plugins y lenguajes propios del proyecto
-# Themes NO — vienen de bind mount (repo separado con su propio CI/CD)
-COPY wp-content/plugins/ /var/www/html/wp-content/plugins/
-COPY wp-content/languages/ /var/www/html/wp-content/languages/
+# PHP extensions required by WordPress
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libwebp-dev \
+    libzip-dev \
+    libonig-dev \
+    libxml2-dev \
+    libicu-dev \
+    unzip \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install \
+        mysqli \
+        pdo_mysql \
+        gd \
+        zip \
+        opcache \
+        exif \
+        intl \
+        mbstring \
+        xml \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY wp-config.php /var/www/html/wp-config.php
+# Enable Apache mod_rewrite for WordPress permalinks
+RUN a2enmod rewrite
 
-RUN chown -R www-data:www-data /var/www/html/wp-content
+# Allow .htaccess overrides
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+
+RUN { \
+    echo "upload_max_filesize = 64M"; \
+    echo "post_max_size = 64M"; \
+    echo "memory_limit = 256M"; \
+    echo "max_execution_time = 300"; \
+} > /usr/local/etc/php/conf.d/wordpress.ini
+
+WORKDIR /var/www/html
+
+COPY . .
+
+RUN chown -R www-data:www-data /var/www/html \
+    && find /var/www/html -type d -exec chmod 755 {} \; \
+    && find /var/www/html -type f -exec chmod 644 {} \;
+
+EXPOSE 80
