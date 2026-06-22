@@ -1,0 +1,75 @@
+*** WooCommerce Extension Envia Changelog ***
+
+2026-04-27 - Version 5.0:
+* New: Interactive pickup map (Leaflet.js + OpenStreetMap) for block checkout, allowing customers to visually browse and select pickup branches directly on a map.
+* New: Pickup display mode selector for block checkout — store owners can now choose between "List only" (WooCommerce standard), "Map only", or "Map and list" via the admin settings.
+* New: When "Map only" is selected, the native WooCommerce pickup list is automatically hidden so only the map is shown.
+* New: Loading indicator on the pickup map while shipping totals recalculate after a branch or rate selection, hiding automatically when the checkout finishes processing.
+* New: Admin settings fields (displayPickUp, displayPickUpBlock, maxPickupRatesPerService) are dynamically disabled in real time when the "Pickup rates options" checkbox is unchecked, without requiring a page save.
+* Fix: Pickup options are now correctly displayed when the cart uses block templates and the classic "Dropdown list" display mode is configured — falls back to the standard per-branch list automatically.
+* Fix: AJAX URL construction in pickUpDestination.js now uses the server-side admin_url() value, resolving missing pickup options in subfolder WooCommerce installations.
+* Fix: Prevented a data mutation bug in pickUpDestination.js where the ajaxurl was overwritten before the AJAX call could use it.
+* Fix: useNewBlocks detection logic replaced with a dedicated uses_block_checkout() helper that correctly distinguishes block checkout from block cart across WooCommerce versions (pre/post 8.3).
+* Update: "Pick up location format" setting renamed and split into separate controls for classic and block checkout templates.
+* Update: Admin settings fields that are incompatible with the current cart/checkout template are visually marked as "* Not available" and grayed out.
+* Update: Connection status indicator on the settings page now displays a colored badge — green when connected, red when disconnected.
+* New: The plugin now supports translation (es_MX, en_US, pt_BR included).
+* Update: The quotation request now sends the customer's locale using determine_locale().
+
+2026-03-16 - Version 4.5.1:
+* Fix: Added missing sync_pickup_location_with_envia method for Envia settings save callback.
+
+2026-03-10 - Version 4.5:
+* New: Support for multiple stores in the same domain
+* New: Max pickup options per rate setting to limit displayed pickup locations per shipping rate (1–10, default 5).
+* Fix: Resolved "Undefined constant WC_VERSION" error when WooCommerce loads after the plugin (compatibility check).
+* New: Pickup location is enabled automatically when the plugin is activated; respects seller preference when disabled during normal operation.
+* Update: Pickup location enable logic runs only on plugin activation (deactivate + activate); no longer overrides when seller disables it in settings.
+* Update: Tested with WooCommerce 10.4.3 and WordPress 6.9.1.
+
+2024-11-07 - Version 4.4.2:
+* Fix: Refined logic for package quantity details to improve accuracy.
+* Fix: Enabled rate requests for carriers in selected countries that don’t require a postal code.
+* Fix: Enabled rate requests for carriers in countries that do not require a postal code.
+* Update: Improved headers in the readme and main plugin file for better clarity.
+* Update: Origin addresses are now displayed correctly when selecting a shipping method within a specific zone.
+* Dev: Added new validations to improve quote processing in classic mode.
+
+2024-09-18 - Version 4.4.1:
+* Fix: Addressed incompatibility with the 'door-to-door' (0) and 'branch-to-branch' (3) drop-off types.
+* Fix: Improved validation for the origin address form.
+* Update: Improved address mapping in the checkout process for Guatemala.
+* Update: Improved UI for store-related information.
+
+2024-05-24 - Version 4.4.0:
+* Fix: Resolved a pricing error when using coupons with any of the three discount types offered by WooCommerce.
+* Fix: Addressed incompatibility with shipping rate rules set from the Envia platform.
+* Fix: Resolved a pricing error for product variants.
+* Dev: Improved support for fixed product discount coupons to now account for excluded products.
+
+2024-05-15 - Version 4.3.2:
+* Fix: Resolved an issue where information was not displayed during the initial OAuth connection due to a conflict in the plugin's main file declaration.
+* Fix: Addressed missing quotes in the cart and checkout processes when adding coupons.
+* Fix: Rectified missing quotes when products were updated on the cart page.
+* Dev: Adapted product dimension data to be sent during the quote process. 
+* Update: Enhanced functionality for certain cart and checkout themes.
+
+2024-03-12 - Version 4.3.1:
+* New: Enhanced compatibility with the new cart and checkout blocks mode in WC.
+* Update: Improved and adapted pick-up functionality for WC's new chart and checkout blocks.
+* New: Implemented Envía Pickup class to handle pickup rates as WC local pickup objects while maintaining classic shipping and local pickup processes in Envía Shipping class.
+* Dev: Separated actioners (type Ajax and type hooks) and functions into distinct PHP files and class structures, including a dedicated class for legacy functions.
+* Dev: Introduced namespaces and trait class declarations in classes, enhancing Object-Oriented Programming (OOP) practices and scalability.
+
+2024-02-21 - Version 4.2.5:
+* Fix: Incompatible file. 
+* Fix: Oauth error message.
+* Fix: Virtual and downloadable product error in finish order.   
+* New: Version request header for Envia calls. 
+* Depured notices and warnings.
+
+2024-01-19 - Version 4.2.4:
+* Fix: Validation of the GET request for origin addresses.
+* Improvements in views for mobile devices (responsive mode).
+* Correction of metadata handling for WooCommerce orders.
+* Code optimization.

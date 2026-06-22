@@ -1,0 +1,447 @@
+/**
+ * 
+ * Envia top
+ */
+
+.envia-top-box{
+    background-color: #fafbfb;
+    border-radius: 4px;
+    padding: 10px 10px 10px 10px;
+    margin: 10px 0px 20px 0px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+.title-top-box {
+    width:100%;
+    display: flex;
+    box-sizing: border-box;
+    border-bottom: 0.14rem solid #f3f3f3;
+    align-items: center;
+}
+.title-top-box > h2 {
+    flex: 1;
+    font-size: 15px;
+}
+.img-title {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 5px;
+}
+.envia-top-box > p {
+    margin: 0px 0px 0px 0px;
+    padding: 5px 0px;
+}
+.info-top-box {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.description-text {
+}
+.envia-sub p{
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d2327;
+}
+.envia-sub hr {
+    color: #1d2327;
+    border-bottom: 0.14rem solid #d8d8d8;
+    border-top: 0;
+}
+/**
+ * 
+ * Envia config ids
+ */
+#about {
+    padding: 0px 0px 0px 40px;
+    padding-right: 5px;
+    font-size: 14px;
+    cursor:pointer;
+    position: absolute;
+    background: #e8f1fc;
+    border-radius: 4px;
+    border: 1px solid #badaff;
+    padding: 2px 10px 2px 10px;
+}
+#about:hover {
+/*    visibility: hidden;*/
+    opacity: 0;
+}
+#about:hover + .info-data{
+  visibility: visible;
+}
+.info-connection-store {
+    width:100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    text-align: right;
+    flex: 1;
+    position: relative;
+}
+.info-data:after {
+    content: 'Click to copy on the clipboard';
+    position: absolute;
+    right: 0%;
+    bottom: 39px;
+    background: #e8f1fc;
+    border-radius: 4px;
+    padding: 2px 4px 2px 4px;
+    font-weight: 600;
+    border: 1px solid #badaff;
+}
+#about:active + .info-data:after {
+    content:'The text was copied to clipboard';
+}
+
+#about:active + .info-data{
+    background: #badaff;
+}
+.info-data > h2{
+    flex: 1;
+    align-items: center;
+}
+.info-data {
+    display: flex;
+    visibility: hidden;
+    background: #e8f1fc;
+    border-radius: 4px;
+    border: 1px solid #badaff;
+    padding: 2px 4px 2px 4px;
+    margin: 0px 0px 0px 15px;
+    flex-wrap: wrap;
+}
+.info-data > div {
+    display: flex;
+    margin-right: 15px;
+    align-items: baseline;
+    justify-content: space-evenly;
+}
+.info-data > div > span {
+    font-weight: 600;
+    margin-right: 5px;
+}
+
+.envia-option {
+
+}
+.envia-top-option {
+
+}
+tr:has(.envia-option) {
+    display: flex;
+    flex-wrap: wrap;
+}
+tr:has(.envia-top-option) {
+    margin-top: 50px;
+}
+
+tr:has(.envia-top-option):first-child:before { 
+    content: 'Plugin view options'; 
+}
+
+tr:has(.envia-top-option):before {
+    display: inline-block;
+    content: "Origin address";
+    border-bottom: 0.14rem solid #d8d8d8;
+    width: 100%;
+    margin: 0rem;
+    transform: translateY(-1rem);
+    position: absolute;
+    font-size: 16px;
+    font-weight: 600;
+    padding:  0px 0px 15px 0px;
+    color: #1d2327;
+}
+
+tr:has(.envia-top-option):nth-child(2):before { 
+    content: 'Plugin view options'; 
+}
+
+tr:has(.envia-top-option) > th{ 
+    padding: 40px 24px 20px 0px !important;
+}
+
+tr:has(.envia-top-option) > td{ 
+    padding: 35px 10px 10px 0px !important;
+}
+
+tr:has(.envia-option) > td .select {
+    border-color: #d0d0d0;
+}
+tr:has(.envia-option) > td .select:focus {
+    color: #027176;
+    box-shadow: 0 0 2px 1px #00989e;
+}
+
+tr:has(.envia-option) > th{ 
+    padding: 12px 10px 20px 0px;
+    width: 400px;
+    height: 20px;
+}
+
+tr:has(.envia-option) > td{ 
+    padding: 8px 10px 10px 0px;
+    width: 500px;
+    height: 20px;
+}
+
+/* Fields with input + description need more vertical space than checkbox options */
+tr:has(.envia-input-with-description) {
+    align-items: flex-start;
+    margin-top: 12px;
+}
+
+tr:has(.envia-input-with-description) > th {
+    vertical-align: top;
+}
+
+tr:has(.envia-input-with-description) > td {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+tr:has(.envia-input-with-description) > td input,
+tr:has(.envia-input-with-description) > td .select {
+    min-height: 36px;
+}
+
+tr:has(.envia-input-with-description) > td p.description {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.not-msj {
+    font-weight: 200;
+    color: #ff5454;
+    font-size: 13px;
+    font-style: italic;
+}
+.envia-cfg-disabled {
+    color: #717171 !important;
+    opacity: .5;   
+    pointer-events: none;
+}
+
+.envia-cfg-display {
+    display: none;
+}
+
+tr:has(.envia-cfg-display) {
+    display: none;
+}
+
+/**
+ * 
+ * Origin address custom option
+ */
+.custom-option {
+    display:flex;
+    align-items:center;
+    padding-top: 10px;
+}
+    .custom-option > p{
+        width: 400px;
+        padding-right: 24px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #1d2327;
+    }
+    .custom-option:nth-child(2) {
+        padding: 15px 10px;
+    }
+    .cus-m-b{
+        width:210px !important;
+    }
+    .custom-option-btn {
+        color: #fff;
+        width: 250px;
+        height: 35px;
+        border-radius: 3px;
+        cursor: pointer;
+        border: 0;
+        font-size: 14px;
+        padding: 5px;
+        box-shadow: 1px 1px 4px 1px grey;
+    }
+    .custom-option-btn:hover {
+        box-shadow: 0 0 10px 0 rgba(24,115,220,0.5);
+        background-color: #dae8f6;
+        border-color: #dae8f6;
+        color: #1873dc;
+    }
+    .open-option {
+        color: #fff;
+        background-color: #1873dc;
+        border-color: #dae8f6;
+    }
+    .create-option {
+        background: #00989e;
+    }
+    .close-option {
+        background: white;
+        border: 2px solid #00989e;
+        color: black;
+    }
+    .area-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        margin: 20px 0px;
+    }
+
+/**
+ * tooltip functions
+ * 
+ */ 
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 140px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 150%;
+  left: 50%;
+  margin-left: -75px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+
+/**
+ * 
+ * main config modal and animations
+ */
+.modal-envia {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%; 
+    height: 100%;
+    z-index: 10000;
+    background: #0000009c;
+}
+
+.saving-block > div{
+    margin: auto;
+    width: 40px;
+}
+.saving-block {
+    display: none;
+    margin: auto;
+    position: relative;
+    top: 40%;
+}
+    .saving-block > p {
+        text-align: center;
+        color: #fff;
+        margin: 0;
+        font-weight: 500;
+        text-shadow: 0px 1px 1px black;
+    }
+
+.lds-dual-ring {
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: auto;
+    position: relative;
+    top: 40%;
+}
+.lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 25px;
+    height: 25px;
+    margin: 3px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    border-color: #fff transparent #fff #fff;
+    animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.wrapper {
+    /*height: 100vh;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.animated-check {
+    display: none;
+    height: 3em;
+    width: 3em;
+}
+
+.animated-check path {
+    fill: none;
+    stroke: #f9ffff;
+    stroke-width: 2;
+    stroke-dasharray: 23;
+    stroke-dashoffset: 23;
+    animation: draw .4s linear forwards;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+@keyframes draw {
+    to {
+        stroke-dashoffset: 0
+    }
+}
+
+@media screen and (max-width: 782px) {
+    tr:has(.envia-option) > th{ 
+        padding: 12px 10px 20px 0px;
+        width: 400px;
+        height: 20px;
+    }
+
+    tr:has(.envia-option) > td{ 
+        height: inherit;
+        border-bottom: 1px solid lightgray;
+    }
+    tr:has(.envia-top-option) > td{ 
+        padding: 0px 10px 10px 0px !important;
+    }
+    tr:has(.envia-last-option) > td {
+        border-bottom: 0;
+    }
+}

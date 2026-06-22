@@ -1,0 +1,61 @@
+/**
+*
+* Envia order manager Iframe
+*/
+.envia-display {
+    text-align:center
+}
+.envia-frame {
+    width: 100%;
+    height: 110vh;
+}
+
+.envia-display p {
+    justify-content:center;
+}
+
+/**
+ * 
+ * wc order edit page
+ */
+
+.envia-meta-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5%;
+    flex-wrap: wrap;
+}
+
+.meta-envia-container {
+    display: flex;
+    align-items: center;
+}
+.meta-envia-container p {
+    font-weight: 700;
+}
+
+#envia-quote-shipping {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+    text-decoration: none;
+    height: 40px;
+    color: #fff;
+    background-color: #00989e;
+    border-color: #00989e;
+    border-radius: 4px;
+    width: 200px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor:  pointer;
+}
+
+#envia-quote-shipping:hover{
+    color: #fff;
+    background-color: #008186;
+    border-color: #007a7e;
+}

@@ -1,0 +1,153 @@
+# Spanish (Mexico) translation for Envia Shipping and Fulfillment
+# Copyright (C) 2026 Tendecys Innovations
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Envia Shipping and Fulfillment 5.0\n"
+"Report-Msgid-Bugs-To: https://tendencys.com\n"
+"POT-Creation-Date: 2026-03-09 00:00+0000\n"
+"PO-Revision-Date: 2026-03-09 00:00+0000\n"
+"Last-Translator: Tendecys Innovations <contact@tendencys.com>\n"
+"Language-Team: Spanish (Mexico)\n"
+"Language: es_MX\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.x\n"
+"X-Domain: envia-shipping\n"
+
+msgid "Envia Shipping and Fulfillment"
+msgstr "Envío y Fulfillment con Envia"
+
+msgid "The Best Shipping Solution for your business. Connect to 150+ couriers worldwide and get over 70% discounts for domestic and international shipments!"
+msgstr "La mejor solución de envíos para tu negocio. Conecta con más de 150 paqueterías en todo el mundo y obtén descuentos de más del 70% en envíos nacionales e internacionales."
+
+msgid "Envia Settings"
+msgstr "Configuración de Envia"
+
+msgid "Orders Manager"
+msgstr "Gestor de pedidos"
+
+msgid "Pickup"
+msgstr "Recolección en sucursal"
+
+msgid "Live shipping rates"
+msgstr "Cotización de envíos en tiempo real"
+
+msgid "Envia rates and shipping"
+msgstr "Tarifas y envíos con Envia"
+
+msgid "Send easily WooCommerce orders with Envia and Rate Shipment Cost."
+msgstr "Envía fácilmente tus pedidos de WooCommerce con Envia y cotiza el costo de envío."
+
+msgid "API Key"
+msgstr "Clave de API"
+
+msgid "Envia live shipping rate"
+msgstr "Cotización de envío en tiempo real"
+
+msgid "Display the shipping quote in your cart and checkout."
+msgstr "Muestra la cotización de envío en tu carrito y checkout."
+
+msgid "Carrier brand image"
+msgstr "Imagen de marca de la paquetería"
+
+msgid "Display the rate options with carrier brand image."
+msgstr "Muestra las opciones de tarifa con la imagen de marca de la paquetería."
+
+msgid "Delivery time"
+msgstr "Tiempo de entrega"
+
+msgid "Display the rate options with estimated delivery time."
+msgstr "Muestra las opciones de tarifa con el tiempo de entrega estimado."
+
+msgid "Pickup rates options"
+msgstr "Opciones de recolección en sucursal"
+
+msgid "Display pickup location options (available only in some countries)."
+msgstr "Muestra las opciones de punto de recolección (disponible solo en algunos países)."
+
+msgid "Pickup classic checkout format"
+msgstr "Formato de recolección en checkout clásico"
+
+msgid "Select display mode for pickup options"
+msgstr "Selecciona el modo de visualización para las opciones de recolección"
+
+msgid "View mode for pickup locations options."
+msgstr "Modo de vista para las opciones de puntos de recolección."
+
+msgid "WooCommerce standard"
+msgstr "Estándar de WooCommerce"
+
+msgid "Dropdown list"
+msgstr "Lista desplegable"
+
+msgid "Pickup block checkout format"
+msgstr "Formato de recolección en checkout por bloques"
+
+msgid "How pickup locations are shown in block checkout."
+msgstr "Cómo se muestran los puntos de recolección en el checkout por bloques."
+
+msgid "List only (WooCommerce standard)"
+msgstr "Solo lista (estándar de WooCommerce)"
+
+msgid "Map only"
+msgstr "Solo mapa"
+
+msgid "Map and list"
+msgstr "Mapa y lista"
+
+msgid "Max pickup options to display"
+msgstr "Máximo de opciones de recolección a mostrar"
+
+msgid "Maximum number of pickup locations to display per service."
+msgstr "Número máximo de puntos de recolección a mostrar por servicio."
+
+msgid "Input type for city"
+msgstr "Tipo de campo para ciudad"
+
+msgid "Select type of input"
+msgstr "Selecciona el tipo de campo"
+
+msgid "Type of input in checkout/cart/plugin page."
+msgstr "Tipo de campo en el checkout, carrito o página del plugin."
+
+msgid "Text input"
+msgstr "Campo de texto"
+
+msgid "Select city"
+msgstr "Selecciona una ciudad"
+
+msgid "Enter a valid address to view shipping options"
+msgstr "Ingresa una dirección válida para ver las opciones de envío"
+
+msgid "Live pickup rates"
+msgstr "Tarifas de recolección en tiempo real"
+
+msgid "Envia rates pickup"
+msgstr "Recolección en sucursal con Envia"
+
+msgid "Your store is not connected yet."
+msgstr "Tu tienda aún no está conectada."
+
+msgid "Your store is connected"
+msgstr "Tu tienda está conectada"
+
+msgid "Connect your store"
+msgstr "Conecta tu tienda"
+
+msgid "Refresh your connection"
+msgstr "Actualizar conexión"
+
+msgid "Envia.com"
+msgstr "Envia.com"
+
+msgid "This option is not compatible with your current cart/checkout template configuration."
+msgstr "Esta opción no es compatible con la configuración actual de tu plantilla de carrito/checkout."
+
+msgid "Shipping actions - Envia.com"
+msgstr "Acciones de envío - Envia.com"
+
+msgid "Generate or quote a new shipping label"
+msgstr "Generar o cotizar una nueva guía de envío"

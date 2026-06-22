@@ -33,6 +33,7 @@ wp-content/upgrade-temp-backup/
 wp-content/themes/
 
 # ── Archivos de debug / scripts temporales ───────────
+build.log
 debug.log
 wp-content/debug.log
 debug-*.php
@@ -45,6 +46,7 @@ flush-*.php
 wp-cli.phar
 
 # ── Archivos locales basura ───────────────────────────
+.DS_Store
 *.rar
 *.zip
 CUserscanon*.txt
