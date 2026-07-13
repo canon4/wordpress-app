@@ -1,0 +1,87 @@
+ul#shipping_method {
+    max-width: 600px;
+    min-width: 350px;
+}
+
+ul#shipping_method>li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: .5rem;
+    padding: 2px;
+    text-indent: initial !important;
+}
+
+ul#shipping_method>li:hover {
+    box-shadow: 0px 0px 1px grey;
+}
+
+#shipping_method li label {
+    width:80%;
+    order: 2;
+    text-align: start;
+    display:flex !important;
+    justify-content: space-between;
+    font-size:14px;
+    margin-bottom: 0;
+    flex: 1;
+}
+
+#shipping_method li label span {
+    align-self: end;
+    font-weight: 600;
+}
+.rate-content {
+    /*display:flex;*/
+    /*justify-content: center;*/
+    width: 45px;
+    order: 1;
+}
+
+.envia-shipping-complement-div {
+    overflow: hidden;
+    position: relative;
+    text-align:center;
+}
+
+.envia-shipping-carrier-img {
+    height: 40px !important;
+    position: relative;
+    padding: 5%;
+    max-height: none !important;
+}
+
+.pick-up-location {
+    background-color: #fff;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    margin: 2px;
+    display: block;
+    padding-left: 8px;
+    padding-right: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 2em;
+    font-size: 13px;
+    color: #444;
+    order: 3;
+    width: 85%!important;
+    margin-left: 18px;
+}
+
+@media (min-width: 766px) {
+    .cart_totals {
+        width:100% !important;
+    }
+}
+
+@media (max-width: 440px) { 
+    ul#shipping_method {
+        min-width: initial;
+    }
+    tr.shipping td {
+        display: flex !important;
+        flex-wrap:wrap
+    }
+}

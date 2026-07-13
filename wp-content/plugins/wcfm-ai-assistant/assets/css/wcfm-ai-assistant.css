@@ -1,0 +1,474 @@
+/* ===================================================================
+   WCFM AI Assistant — Modal styles
+   =================================================================== */
+
+/* Header button */
+#wcfm-ai-open-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 16px;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #6c3fc5 0%, #9b59b6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(108, 63, 197, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    vertical-align: middle;
+}
+
+#wcfm-ai-open-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(108, 63, 197, 0.45);
+}
+
+#wcfm-ai-open-btn:active {
+    transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------
+   Overlay
+--------------------------------------------------------------- */
+.wcfm-ai-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+/* ---------------------------------------------------------------
+   Modal container
+--------------------------------------------------------------- */
+.wcfm-ai-modal {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 960px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: waiModalIn 0.18s ease-out;
+}
+
+@keyframes waiModalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ---------------------------------------------------------------
+   Modal header
+--------------------------------------------------------------- */
+.wcfm-ai-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #6c3fc5 0%, #9b59b6 100%);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.wcfm-ai-modal-header span {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+#wcfm-ai-close-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+#wcfm-ai-close-btn:hover {
+    background: rgba(255,255,255,0.35);
+}
+
+/* ---------------------------------------------------------------
+   Modal body
+--------------------------------------------------------------- */
+.wcfm-ai-modal-body {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ---------------------------------------------------------------
+   Left column — Inputs
+--------------------------------------------------------------- */
+.wcfm-ai-inputs-col {
+    width: 320px;
+    flex-shrink: 0;
+    background: #faf9ff;
+    border-right: 1px solid #e8e0f5;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wcfm-ai-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wcfm-ai-field-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wcfm-ai-field-group input[type="text"],
+.wcfm-ai-field-group textarea {
+    border: 1px solid #d8d0f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+    width: 100%;
+    box-sizing: border-box;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.wcfm-ai-field-group input[type="text"]:focus,
+.wcfm-ai-field-group textarea:focus {
+    outline: none;
+    border-color: #7c4dcc;
+    box-shadow: 0 0 0 2px rgba(124, 77, 204, 0.15);
+}
+
+.wcfm-ai-badge {
+    background: #e8e0f5;
+    color: #7c4dcc;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.wcfm-ai-required {
+    color: #e74c3c;
+}
+
+/* Vendor chip */
+.wcfm-ai-vendor-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ede8f9;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #4a2080;
+    border: 1px solid #d4c8f0;
+}
+
+.wcfm-ai-vendor-icon {
+    font-size: 20px;
+}
+
+.wcfm-ai-vendor-chip strong {
+    font-size: 13px;
+}
+
+/* Generate button */
+.wcfm-ai-generate-btn {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, #6c3fc5 0%, #9b59b6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity 0.15s, transform 0.12s;
+}
+
+.wcfm-ai-generate-btn:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+}
+
+.wcfm-ai-generate-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Progress bar */
+.wcfm-ai-progress {
+    position: relative;
+    background: #ede8f9;
+    border-radius: 6px;
+    height: 6px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.wcfm-ai-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #6c3fc5, #9b59b6);
+    border-radius: 6px;
+}
+
+.wcfm-ai-progress-fill.animating {
+    animation: waiProgress 12s ease-in-out forwards;
+}
+
+@keyframes waiProgress {
+    0%   { width: 0; }
+    30%  { width: 40%; }
+    60%  { width: 65%; }
+    85%  { width: 82%; }
+    100% { width: 92%; }
+}
+
+.wcfm-ai-progress-label {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    font-size: 11px;
+    color: #7c4dcc;
+    font-style: italic;
+}
+
+/* Error box */
+.wcfm-ai-error {
+    background: #fdecea;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #c0392b;
+    line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------
+   Right column — Results
+--------------------------------------------------------------- */
+.wcfm-ai-results-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* Empty state */
+.wcfm-ai-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    text-align: center;
+    padding: 40px 20px;
+    gap: 12px;
+}
+
+.wcfm-ai-empty-icon {
+    font-size: 48px;
+    opacity: 0.3;
+}
+
+.wcfm-ai-empty-state p {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Result panel */
+#wcfm-ai-result-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Tabs */
+.wcfm-ai-result-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 12px 0;
+    background: #f5f0ff;
+    border-bottom: 2px solid #e0d4f8;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.wcfm-ai-rtab {
+    padding: 6px 14px;
+    border: 1px solid #d4c8f0;
+    border-bottom: none;
+    background: #ede8f9;
+    color: #6c3fc5;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.wcfm-ai-rtab.active {
+    background: #fff;
+    color: #4a2080;
+    border-color: #c5b6f0;
+    position: relative;
+    bottom: -2px;
+    z-index: 1;
+}
+
+.wcfm-ai-rtab:hover:not(.active) {
+    background: #e0d4f8;
+}
+
+/* Tab panels */
+.wcfm-ai-tab-panels {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    background: #fff;
+}
+
+.wcfm-ai-tab-panel {
+    display: none;
+}
+
+.wcfm-ai-tab-panel.active {
+    display: block;
+}
+
+.wcfm-ai-tab-panel textarea {
+    width: 100%;
+    min-height: 180px;
+    box-sizing: border-box;
+    border: 1px solid #e0d4f8;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    font-family: inherit;
+    color: #333;
+}
+
+.wcfm-ai-tab-panel textarea:focus {
+    outline: none;
+    border-color: #7c4dcc;
+    box-shadow: 0 0 0 2px rgba(124, 77, 204, 0.12);
+}
+
+/* SEO tab fields */
+.wcfm-ai-seo-field {
+    margin-bottom: 14px;
+}
+
+.wcfm-ai-seo-field label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+.wcfm-ai-seo-field input[type="text"],
+.wcfm-ai-seo-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #e0d4f8;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.wcfm-ai-seo-field input:focus,
+.wcfm-ai-seo-field textarea:focus {
+    outline: none;
+    border-color: #7c4dcc;
+    box-shadow: 0 0 0 2px rgba(124, 77, 204, 0.12);
+}
+
+.wcfm-ai-char-count {
+    font-weight: 400;
+    color: #999;
+    font-size: 11px;
+}
+
+/* Apply row */
+.wcfm-ai-apply-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid #e8e0f5;
+    background: #faf9ff;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.wcfm-ai-apply-row .button-primary {
+    background: #6c3fc5;
+    border-color: #5a33a8;
+    color: #fff;
+}
+
+.wcfm-ai-apply-row .button-primary:hover {
+    background: #5a33a8;
+}
+
+/* ---------------------------------------------------------------
+   Responsive — single column on narrow screens
+--------------------------------------------------------------- */
+@media (max-width: 700px) {
+    .wcfm-ai-modal-body {
+        flex-direction: column;
+    }
+
+    .wcfm-ai-inputs-col {
+        width: 100%;
+        max-height: 45vh;
+        border-right: none;
+        border-bottom: 1px solid #e8e0f5;
+    }
+
+    .wcfm-ai-results-col {
+        max-height: 45vh;
+    }
+}

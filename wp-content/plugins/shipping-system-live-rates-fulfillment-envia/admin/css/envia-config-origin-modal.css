@@ -1,0 +1,81 @@
+/**
+ * 
+ * add origin addres modal
+ */
+    .modal-address {
+        position: relative;
+        top: 10%;
+        margin: auto;
+        background: #ffffff;
+        width: 500px;
+        padding: 1% 2%;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0px 3px 5px 1px #2b2b2b;
+    }
+    .modal-address > .form-table > tbody {
+        display :flex;
+        flex-wrap: wrap;
+        width:auto;
+    }
+    .modal-address > .form-table  tr {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .modal-address > .form-table tr:nth-child(5){
+        width:100%
+    }
+    .envia-label{
+        text-align: left;
+        padding: 0 !important;
+    }
+    .envia-input{
+        padding: 0 !important;
+        text-align:left;
+        width: 95%;
+    }
+
+    .e-i-2 {
+        width:97%
+    }
+    .envia-label>label {
+        font-weight: 600;
+        display: none;
+    }
+     .envia-label>label>span {
+        color: red;
+    }
+    .envia-input input[type='text'] {
+        width: 100% !important;
+        border: 0.001rem solid #e8f5f2;
+        background: #f8f8f8;
+        height: 35px !important;
+    }
+    .envia-input input[type='text']::placeholder {
+        color: #3c3c3c
+    }
+    .envia-input>select {
+        width: 100% !important;
+        max-width: initial;
+        border: 0.001rem solid #e8f5f2 !important;
+        background: #f8f8f8 url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%206l5%205%205-5%202%201-7%207-7-7%202-1z%22%20fill%3D%22%23555%22%2F%3E%3C%2Fsvg%3E') no-repeat right 5px top 55%;
+        color: #3c3c3c;
+    }
+    .envia-row > .envia-input > select {
+        width: 100% !important;
+        border-color: #189771;
+        color: #646970;
+    }
+    .envia-input-error {
+        border-color: #f44336 !important;
+    }
+    .envia-span-error{
+        color: #f44336;
+        font-size: 12px;
+    }
+    #envia-show-error{
+        color: #f44336;
+        font-size: 12px;
+    }

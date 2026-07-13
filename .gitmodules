@@ -1,0 +1,3 @@
+[submodule "wp-content/themes/amazonia-theme"]
+	path = wp-content/themes/amazonia-theme
+	url = https://github.com/canon4/amazonia-theme.git

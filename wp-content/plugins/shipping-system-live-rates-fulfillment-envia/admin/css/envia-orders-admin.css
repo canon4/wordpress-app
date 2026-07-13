@@ -1,0 +1,101 @@
+/**
+*
+* Envia order manager Iframe
+*/
+/**
+ * El gestor se muestra en un iframe fijo al area visible para evitar el
+ * "doble scroll" (el del wp-admin + el del iframe) que rompia la navegacion.
+ * Al estar fijo, el iframe no participa del scroll de la pagina: el menu
+ * lateral de WordPress se recorre normal y el iframe queda siempre a la vista
+ * con un unico scroll (el interno de la app de Envia.com).
+ *
+ * left = ancho del menu lateral segun su estado (expandido/colapsado/movil),
+ * replicando los mismos breakpoints que usa el propio wp-admin.
+ */
+.envia-display {
+    position: fixed;
+    top: 32px;      /* debajo de la barra de administracion */
+    left: 160px;    /* a la derecha del menu expandido */
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    line-height: 0;
+    background: #f0f0f1;
+    z-index: 1;
+}
+.envia-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Menu colapsado manualmente por el usuario */
+body.folded .envia-display {
+    left: 36px;
+}
+
+/* Auto-fold de WordPress (menu solo iconos) */
+@media only screen and (max-width: 960px) {
+    .envia-display {
+        left: 36px;
+    }
+}
+
+/* Pantallas pequenas: menu fuera de lienzo y barra admin de 46px */
+@media only screen and (max-width: 782px) {
+    .envia-display {
+        top: 46px;
+        left: 0;
+    }
+}
+
+.envia-display p {
+    justify-content:center;
+}
+
+/**
+ * 
+ * wc order edit page
+ */
+
+.envia-meta-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5%;
+    flex-wrap: wrap;
+}
+
+.meta-envia-container {
+    display: flex;
+    align-items: center;
+}
+.meta-envia-container p {
+    font-weight: 700;
+}
+
+#envia-quote-shipping {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+    text-decoration: none;
+    height: 40px;
+    color: #fff;
+    background-color: #00989e;
+    border-color: #00989e;
+    border-radius: 4px;
+    width: 200px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor:  pointer;
+}
+
+#envia-quote-shipping:hover{
+    color: #fff;
+    background-color: #008186;
+    border-color: #007a7e;
+}

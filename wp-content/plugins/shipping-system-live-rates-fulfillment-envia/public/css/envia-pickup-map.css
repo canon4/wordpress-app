@@ -1,0 +1,71 @@
+/* 9.2 — Map container: fixed height with CSS custom property override */
+#envia-pickup-map-container {
+	position: relative;
+	width: 100%;
+	height: var(--envia-map-height, 400px);
+	margin-top: 16px;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+/* Loading overlay shown during totals recalculation */
+.envia-map-loading-overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(255, 255, 255, 0.65);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 50;
+	border-radius: 4px;
+}
+
+.envia-map-loading-spinner {
+	width: 32px;
+	height: 32px;
+	border: 3px solid #ddd;
+	border-top-color: #2271b1;
+	border-radius: 50%;
+	animation: envia-map-spin 0.7s linear infinite;
+}
+
+@keyframes envia-map-spin {
+	to { transform: rotate( 360deg ); }
+}
+
+/* 9.3 — Keep Leaflet layers below WooCommerce block modal overlays.
+   WC block overlays use z-index ~100–200; Leaflet defaults are 400–600. */
+#envia-pickup-map-container .leaflet-pane {
+	z-index: 10;
+}
+
+#envia-pickup-map-container .leaflet-top,
+#envia-pickup-map-container .leaflet-bottom {
+	z-index: 20;
+}
+
+/* Leaflet popup must stay above panes but still below WC overlays */
+#envia-pickup-map-container .leaflet-popup {
+	z-index: 30;
+}
+
+/* 9.4 — Fallback message when Leaflet CDN is unavailable */
+#envia-pickup-map-container .envia-map-fallback {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--envia-map-height, 400px);
+	margin: 0;
+	padding: 16px;
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	color: #555;
+	font-size: 0.9em;
+	text-align: center;
+}
+
+/* 7.3 — Selected marker highlight: blue tint on the Leaflet default icon */
+#envia-pickup-map-container .leaflet-marker-icon.envia-marker-selected {
+	filter: hue-rotate(200deg) brightness(1.2);
+}
