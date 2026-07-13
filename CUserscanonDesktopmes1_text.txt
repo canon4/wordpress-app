@@ -1,0 +1,524 @@
+Amazonia Market — Análisis Técnico
+1. Análisis de Requerimientos
+1.1 Objetivo del Sistema
+Plataforma e-commerce multivendedor para comunidades afrocolombianas e indígenas de la Amazonía colombiana. Cada producto lleva valor cultural agregado (historia, comunidad, proceso de elaboración).
+1.2 Requerimientos Funcionales
+ID
+Módulo
+Requerimiento
+RF-01
+Auth
+Login/registro WordPress nativo + roles WCFM
+RF-02
+Vendor
+Registro de comunidades como vendedores (wcfm_vendor)
+RF-03
+Productos
+CRUD de productos con metadata cultural
+RF-04
+Tienda
+Perfil de tienda/comunidad con storytelling
+RF-05
+Órdenes
+Gestión de pedidos multivendedor con comisiones
+RF-06
+Pagos
+Integración Stripe/PayU/MercadoPago
+RF-07
+Reviews
+Reseñas de productos y tiendas
+RF-08
+Soporte
+Sistema de enquiries y tickets
+RF-09
+Analytics
+Dashboard de ventas por vendedor
+RF-10
+Favoritos
+Lista de favoritos por usuario
+RF-11
+i18n
+Soporte multiidioma (TranslatePress)
+RF-12
+IA
+Generación de descripciones y análisis
+1.3 Requerimientos No Funcionales
+ID
+Categoría
+Requerimiento
+RNF-01
+Rendimiento
+Tiempo de carga < 3s
+RNF-02
+Seguridad
+Autenticación WordPress + nonces CSRF
+RNF-03
+Escalabilidad
+Soporte multi-región (Caquetá → nacional)
+RNF-04
+Compatibilidad
+WooCommerce 10.6.1 + WCFM 6.7.26
+RNF-05
+SEO
+Optimización con metadata cultural
+2. Stack Tecnológico
+2.1 Versiones Instaladas
+Componente
+Versión
+Rol
+WordPress
+6.8+
+CMS / Backend core
+WooCommerce
+10.6.1
+Motor e-commerce
+WCFM Frontend Manager
+6.7.26
+Dashboard de vendedores
+WCFM Marketplace
+3.7.1
+Lógica multivendedor, comisiones
+WCFM Membership
+2.11.9
+Planes de membresía para vendors
+TranslatePress
+Instalado
+Internacionalización
+Loco Translate
+Instalado
+Traducción de strings
+PHP
+7.4+
+Runtime
+MySQL
+8.x (XAMPP)
+Base de datos
+Tailwind CSS
+CDN v3
+Framework CSS del theme
+2.2 Theme Custom: amazonia-theme
+amazonia-theme/├── assets/css/main.css          # Estilos compilados├── assets/js/main.js            # JS principal├── assets/js/favorites.js       # Sistema de favoritos├── assets/js/tailwind-config.js # Config Tailwind├── inc/favorites.php            # Lógica AJAX favoritos├── shortcodes.php               # Shortcodes custom├── template-parts/              # Componentes UI│   ├── breadcrumbs/│   ├── filters/│   ├── footer/│   ├── header/│   ├── hero/│   └── product/├── woocommerce/                 # Template overrides WC│   ├── archive-product.php│   ├── content-product.php│   ├── content-single-product.php│   ├── single-product.php│   ├── auth/, cart/, checkout/, myaccount/│   └── emails/, global/, loop/, notices/, order/├── wcfm/store/                  # Override tienda vendedor│   └── wcfmmp-view-store.php├── functions.php                # Setup del theme├── header.php / footer.php├── front-page.php├── page-about-us.php└── template-wcfm-dashboard.php
+3. Arquitectura del Sistema
+3.1 Diagrama de Arquitectura
+3.2 Flujo de Autenticación
+3.3 Roles del Sistema
+Rol
+Slug WP
+Origen
+Permisos principales
+Administrador
+administrator
+WordPress
+Control total
+Vendedor
+wcfm_vendor
+WCFM
+Gestionar tienda, productos, pedidos
+Cliente
+customer
+WooCommerce
+Comprar, reseñas, favoritos
+Vendedor deshabilitado
+disable_vendor
+WCFM
+Vendor suspendido
+Usuarios actuales en BD:
+Login
+Rol
+Descripción
+manager
+administrator
+Admin principal
+mana
+wcfm_vendor
+Vendedor/comunidad
+A
+wcfm_vendor
+Vendedor/comunidad
+aaa
+customer
+Cliente
+4. Diseño de Base de Datos
+4.1 Inventario Completo de Tablas (92 tablas)
+WordPress Core (12 tablas)
+Tabla
+Propósito
+wp_posts
+Productos, páginas, adjuntos, pedidos legacy
+wp_postmeta
+Metadata de productos (precio, SKU, galería, vendor)
+wp_users
+Usuarios (admin, vendors, clientes)
+wp_usermeta
+Roles, config WCFM, perfil vendor
+wp_terms
+Categorías de producto, etiquetas
+wp_term_taxonomy
+Relación taxonomía-término
+wp_term_relationships
+Relación post-término
+wp_termmeta
+Metadata de términos
+wp_options
+Configuración global
+wp_comments
+Reseñas de productos
+wp_commentmeta
+Meta de reseñas
+wp_links
+Enlaces (legacy)
+WooCommerce (25 tablas)
+Tabla
+Propósito
+Campos clave
+wp_wc_orders
+Pedidos HPOS
+id, status, currency, total_amount, customer_id, payment_method, date_created_gmt
+wp_wc_order_addresses
+Direcciones de envío/facturación
+order_id, address_type, first_name, last_name, city, country, email, phone
+wp_wc_order_operational_data
+Datos operativos del pedido
+order_id, order_key, date_paid_gmt, shipping_total_amount, discount_total_amount
+wp_wc_order_product_lookup
+Lookup productos-pedidos
+order_item_id, order_id, product_id, product_qty, product_net_revenue
+wp_wc_order_stats
+Estadísticas de pedidos
+order_id, num_items_sold, total_sales, net_total, status, customer_id
+wp_wc_orders_meta
+Metadata extendida de pedidos
+—
+wp_wc_customer_lookup
+Cache de clientes
+customer_id, user_id, email, date_registered, country
+wp_wc_product_meta_lookup
+Cache búsqueda productos
+product_id, sku, min_price, stock_status, average_rating, total_sales
+wp_wc_product_attributes_lookup
+Lookup atributos
+—
+wp_wc_category_lookup
+Lookup categorías
+—
+wp_wc_order_coupon_lookup
+Lookup cupones-pedidos
+—
+wp_wc_order_tax_lookup
+Lookup impuestos
+—
+wp_wc_download_log
+Log de descargas
+—
+wp_wc_product_download_directories
+Directorios de descarga
+—
+wp_wc_rate_limits
+Límites de tasa API
+—
+wp_wc_reserved_stock
+Stock reservado
+—
+wp_wc_tax_rate_classes
+Clases de impuestos
+—
+wp_wc_webhooks
+Webhooks
+—
+wp_wc_admin_notes
+Notas del admin
+—
+wp_wc_admin_note_actions
+Acciones de notas
+—
+wp_woocommerce_api_keys
+Claves REST API
+—
+wp_woocommerce_sessions
+Sesiones de carrito
+—
+wp_woocommerce_payment_tokens
+Tokens de pago
+—
+wp_woocommerce_order_items
+Items de pedidos
+—
+wp_woocommerce_order_itemmeta
+Metadata items (incluye _vendor_id)
+—
+WCFM Marketplace (24 tablas)
+Tabla
+Propósito
+Campos clave
+wp_wcfm_marketplace_orders
+Comisiones por item vendido
+vendor_id, order_id, product_id, quantity, commission_amount, total_commission, order_status, commission_status, withdraw_status
+wp_wcfm_marketplace_orders_meta
+Metadata de comisiones
+—
+wp_wcfm_marketplace_vendor_ledger
+Libro contable del vendor
+vendor_id, credit, debit, reference_id, reference, reference_status
+wp_wcfm_marketplace_withdraw_request
+Solicitudes de retiro
+vendor_id, withdraw_amount, withdraw_charges, withdraw_status, payment_method
+wp_wcfm_marketplace_withdraw_request_meta
+Metadata de retiros
+—
+wp_wcfm_marketplace_reviews
+Reseñas de tiendas
+vendor_id, author_id, review_title, review_rating, approved
+wp_wcfm_marketplace_reviews_response
+Respuestas a reseñas
+—
+wp_wcfm_marketplace_review_rating_meta
+Meta de ratings
+—
+wp_wcfm_marketplace_refund_request
+Solicitudes de reembolso
+vendor_id, order_id, commission_id, refunded_amount, refund_status
+wp_wcfm_marketplace_refund_request_meta
+Meta de reembolsos
+—
+wp_wcfm_marketplace_reverse_withdrawal
+Retiro inverso (cobros al vendor)
+vendor_id, gross_total, commission, balance
+wp_wcfm_marketplace_reverse_withdrawal_meta
+Meta reverse withdrawal
+—
+wp_wcfm_marketplace_product_multivendor
+Productos multi-vendor
+product_id, parent_product_id, vendor_id, product_price
+wp_wcfm_marketplace_shipping_zone_methods
+Métodos envío por vendor
+instance_id, method_id, zone_id, vendor_id
+wp_wcfm_marketplace_shipping_zone_locations
+Zonas de envío vendor
+—
+wp_wcfm_marketplace_store_taxonomies
+Taxonomías de tienda
+vendor_id, product_id, term, taxonomy
+WCFM Core (12 tablas)
+Tabla
+Propósito
+Campos clave
+wp_wcfm_enquiries
+Preguntas sobre productos
+enquiry, product_id, vendor_id, customer_id, customer_email
+wp_wcfm_enquiries_meta/response/response_meta
+Respuestas a enquiries
+—
+wp_wcfm_messages
+Mensajería interna
+message, author_id, message_to, message_type, is_direct_message
+wp_wcfm_messages_modifier/stat
+Estado de mensajes
+—
+wp_wcfm_support
+Tickets de soporte
+order_id, product_id, vendor_id, customer_id, query, priority, status
+wp_wcfm_support_meta/response/response_meta
+Respuestas soporte
+—
+wp_wcfm_daily_analysis
+Analytics diario
+is_shop, is_store, is_product, product_id, author_id, count, visited
+wp_wcfm_detailed_analysis
+Analytics detallado
+product_id, author_id, referer, ip_address, country, city
+wp_wcfm_following_followers
+Seguidores de tiendas
+user_id, follower_id, notify
+WCFM Membership (1 tabla)
+Tabla
+Propósito
+wp_wcfm_membership_subscription
+Suscripciones de membresía vendor
+4.2 Diagrama Entidad-Relación Principal
+4.3 Metadata Clave del Vendor (wp_usermeta)
+meta_key
+Descripción
+wp_capabilities
+Rol: {"wcfm_vendor":true}
+wcfmmp_profile_settings
+Config completa del perfil (serializada)
+wcfmmp_store_name
+Nombre de la tienda
+_wcfm_street_1, _wcfm_city, _wcfm_country, _wcfm_state, _wcfm_zip
+Ubicación del vendor
+_wcfm_billing_*
+Datos de facturación del vendor
+_wcfmmp_avg_review_rating
+Rating promedio de la tienda
+_wcfmmp_shipping
+Config de envío del vendor
+4.4 Metadata Clave del Producto (wp_postmeta)
+meta_key
+Descripción
+_price, _regular_price, _sale_price
+Precios
+_sku
+Código SKU
+_stock, _stock_status, _manage_stock
+Inventario
+_thumbnail_id
+Imagen principal
+_product_image_gallery
+Galería de imágenes
+_wcfm_product_author
+ID del vendor propietario
+_wcfmmp_commission
+Config de comisión específica
+_wcfmmp_processing_time
+Tiempo de procesamiento
+_wcfm_product_views
+Contador de vistas
+5. Análisis del Plugin WooCommerce 10.6.1
+5.1 Arquitectura Interna
+woocommerce/├── includes/           # Clases PHP core│   ├── class-wc-install.php      # Instalación y migraciones DB│   ├── class-woocommerce.php     # Clase principal singleton│   └── ...├── src/                # Código moderno (PSR-4 autoload)│   └── Automattic/WooCommerce/├── templates/          # Templates sobreescribibles por theme├── assets/             # CSS/JS del frontend├── packages/           # Paquetes internos└── vendor/             # Dependencias Composer
+5.2 Sistema HPOS (High-Performance Order Storage)
+WooCommerce 10.6.1 usa HPOS — almacena pedidos en tablas dedicadas (wp_wc_orders*) en lugar de wp_posts. Esto mejora rendimiento significativamente.
+Tablas HPOS activas: - wp_wc_orders — Pedido principal - wp_wc_order_addresses — Direcciones billing/shipping - wp_wc_order_operational_data — Datos operacionales - wp_wc_orders_meta — Metadata extensible
+5.3 Sistema de Hooks Relevantes
+Hook
+Tipo
+Uso en Amazonia
+woocommerce_before_single_product_summary
+Action
+Removido para layout custom
+woocommerce_single_product_summary
+Action
+Removido; renderizado manual
+woocommerce_after_single_product_summary
+Action
+Removido para storytelling layout
+woocommerce_before_main_content
+Action
+Wrapper custom <main>
+template_include
+Filter
+Redirect WCFM dashboard template
+5.4 REST API Disponible
+WooCommerce expone REST API completa en /wp-json/wc/v3/: - GET /products — Listar productos - GET /orders — Listar pedidos - GET /customers — Listar clientes - Autenticación via API Keys (wp_woocommerce_api_keys)
+6. Análisis del Plugin WCFM Marketplace 3.7.1
+6.1 Ecosistema WCFM (3 plugins)
+Dependencia: Marketplace requiere Frontend Manager. Membership requiere ambos.
+6.2 Flujo de Comisiones
+6.3 Tablas Propias del Marketplace — Detalle
+wp_wcfm_marketplace_orders (tabla más importante):
+Campo
+Tipo
+Descripción
+vendor_id
+bigint
+FK a wp_users (vendor)
+order_id
+bigint
+FK a wp_wc_orders
+product_id
+bigint
+FK a wp_posts (producto)
+quantity
+bigint
+Cantidad vendida
+item_total
+varchar
+Total del item
+commission_amount
+varchar
+Comisión calculada
+total_commission
+varchar
+Comisión neta final
+commission_status
+varchar
+pending/paid
+withdraw_status
+varchar
+pending/completed
+is_withdrawable
+tinyint
+¿Disponible para retiro?
+6.4 Almacenamiento del Perfil Vendor
+El perfil de tienda se almacena en wp_usermeta con key wcfmmp_profile_settings como array PHP serializado que incluye: - Nombre, descripción, banner, logo de tienda - Políticas de envío y devolución - Información de pago - Redes sociales - Configuración SEO de la tienda - Horarios de atención (wcfm_vendor_store_hours)
+7. Módulo de Login — Análisis Técnico
+7.1 Implementación Actual
+El login usa el sistema nativo de WordPress/WooCommerce:
+Componente
+Archivo
+Función
+Formulario login
+woocommerce/myaccount/ (template override)
+Formulario estándar WC
+Autenticación
+WordPress core
+wp_authenticate() + wp_signon()
+Sesiones
+wp_woocommerce_sessions
+Carrito persistente
+Passwords
+WordPress core
+wp_hash_password() (bcrypt/phpass)
+CSRF
+WordPress core
+Nonces en todos los formularios
+Cookies
+WordPress core
+wordpress_logged_in_*, wordpress_sec_*
+7.2 Registro de Vendors
+WCFM Membership gestiona el registro de nuevos vendedores: 1. Usuario se registra como customer 2. Solicita membresía vendor 3. Admin aprueba → rol cambia a wcfm_vendor 4. Se crea perfil en wcfmmp_profile_settings 5. Vendor accede a dashboard WCFM
+7.3 Template de Dashboard WCFM
+El theme usa template-wcfm-dashboard.php con detección por shortcode:
+// functions.php - línea 161add_filter('template_include', function($template) {    if (has_shortcode($post->post_content, 'wc_frontend_manager')) {        return locate_template('template-wcfm-dashboard.php');    }    return $template;}, 99);
+8. Configuración del Repositorio
+8.1 Estado Actual
+Git inicializado en amazonia-theme/
+Estructura de repositorio enfocada solo en el theme
+WordPress core, plugins y uploads NO están en el repo
+8.2 Estructura Recomendada
+amazonia-theme/           (repositorio Git)├── .git/├── assets/├── inc/├── template-parts/├── woocommerce/          # Template overrides├── wcfm/                 # Template overrides WCFM├── functions.php├── style.css├── context.md            # Documentación del proyecto└── README.md
+9. Resumen de Métricas del Sistema
+Métrica
+Valor
+Total tablas en BD
+92
+Tablas WordPress core
+12
+Tablas WooCommerce
+25
+Tablas WCFM (total 3 plugins)
+37
+Tablas TranslatePress
+7
+Tablas Action Scheduler
+4
+Usuarios registrados
+4 de Prueba
+Productos publicados
+4
+Páginas
+13
+Roles activos
+3 (administrator, wcfm_vendor, customer)
+Template overrides WC
+14 archivos + 9 directorios
+Template overrides WCFM
+1 archivo (store)
+Base de datos
+wooecomerce (MySQL)
+Charset
+utf8mb4
+10. Mockups
+Login:
+Products:
+Products details:
+Perfil:
+Cart:
+Checkout:
+Vendor dashboard:
+Estado actual del proyecto:
+El proyecto se encuentra actualmente en una etapa de desarrollo enfocada en la construcción, validación y mejora de la experiencia visual del usuario. Durante esta fase se ha trabajado en la personalización de la interfaz, la organización de componentes visuales y la adaptación de las vistas principales de la plataforma para ofrecer una navegación intuitiva tanto para compradores como para vendedores.
+Desde el punto de vista técnico, la infraestructura principal del sistema se encuentra implementada y configurada. La plataforma utiliza WordPress como sistema de gestión de contenidos, WooCommerce como motor de comercio electrónico y WCFM Marketplace para la administración del modelo multivendedor. Estas tecnologías proporcionan las funcionalidades necesarias para la autenticación de usuarios, gestión de productos, administración de pedidos, control de vendedores, manejo de roles y almacenamiento de la información.
+Adicionalmente, se dispone de una base de datos estructurada, mecanismos de autenticación funcionales, roles de usuario definidos, arquitectura tecnológica documentada y un tema personalizado sobre el cual se está desarrollando la identidad visual del proyecto.
+Actualmente, las actividades pendientes se concentran en la revisión, validación y optimización de la interfaz gráfica, incluyendo aspectos relacionados con usabilidad, accesibilidad, diseño responsivo, consistencia visual y experiencia de usuario. Paralelamente, será necesario realizar pruebas funcionales integrales para verificar el correcto comportamiento de todos los módulos implementados y garantizar que los requerimientos definidos sean satisfechos de manera adecuada.
+En conclusión, el proyecto presenta un avance significativo en sus componentes tecnológicos y funcionales. La infraestructura y los módulos principales se encuentran implementados y configurados, mientras que las siguientes etapas estarán enfocadas en la validación integral del sistema y en el perfeccionamiento de la experiencia visual antes de su despliegue final.

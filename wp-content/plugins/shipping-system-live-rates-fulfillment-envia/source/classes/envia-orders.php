@@ -72,7 +72,7 @@ trait Envia_Orders {
 				</p>
 			</div>
 			<div class = 'meta-envia-button'>
-				<a id = 'envia-quote-shipping' href='/wp-admin/admin.php?page=envia-order-manager&id=" . esc_html( $args['args']['orderId'] ) . "'> Quote and shipping </a>
+				<a id = 'envia-quote-shipping' target='_blank' rel='noopener' href='/wp-admin/admin.php?page=envia-order-manager&id=" . esc_html( $args['args']['orderId'] ) . "'> Quote and shipping </a>
 			</div>
 		</div>" . PHP_EOL;
 		wp_enqueue_script( 'orderBox', plugins_url( '../../admin/js/enviaOrders.js', __FILE__ ), array(), '1.2', false );

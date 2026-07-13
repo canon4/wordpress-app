@@ -5,6 +5,25 @@ defined( 'ABSPATH' ) || exit;
 trait Envia_Templates {
 	public static function templates_action() {
 		add_action( 'admin_menu', array( static::class, 'add_submenu_option' ) );
+		add_action( 'admin_head', array( static::class, 'open_manager_in_new_tab' ) );
+	}
+
+	/**
+	 * Hace que el enlace del gestor de ordenes de Envia se abra en una pestana
+	 * nueva (mismo comportamiento que WCFM), sin sacar al usuario del wp-admin actual.
+	 */
+	public static function open_manager_in_new_tab() {
+		?>
+		<script>
+		document.addEventListener( 'DOMContentLoaded', function() {
+			var links = document.querySelectorAll( '#adminmenu a[href*="page=envia-order-manager"]' );
+			links.forEach( function( link ) {
+				link.setAttribute( 'target', '_blank' );
+				link.setAttribute( 'rel', 'noopener' );
+			} );
+		} );
+		</script>
+		<?php
 	}
 
 	public static function print_envia_page() {
@@ -60,9 +79,9 @@ trait Envia_Templates {
 		}
 
 		$css = array(
-			'ordersAdmin' => array( 
+			'ordersAdmin' => array(
 				'file' => 'orders-admin',
-				'version' => '1.5',
+				'version' => '1.7',
 			),
 		'configOauthAdmin' => array( 
 			'file' => 'config-oauth-admin',

@@ -1,70 +1,84 @@
-/**
- * WCFM AI Assistant — Admin settings page script.
- */
+/* WCFM AI Assistant — Admin settings JS */
 (function ($) {
     'use strict';
 
     var defaultModels = {
         deepseek: 'deepseek-chat',
-        claude:   'claude-sonnet-4-6',
         openai:   'gpt-4o',
+        claude:   'claude-sonnet-4-6',
         gemini:   'gemini-2.0-flash',
         groq:     'llama-3.3-70b-versatile',
+        mistral:  'mistral-large-latest',
     };
 
     var keyHints = {
-        deepseek: 'Obtén tu key en platform.deepseek.com → API Keys (costo ~$0.30/100 productos)',
-        claude:   'Obtén tu key en console.anthropic.com → API Keys (costo ~$8/100 productos)',
-        openai:   'Obtén tu key en platform.openai.com → API Keys (costo ~$4/100 productos)',
-        gemini:   'Obtén tu key en aistudio.google.com → Obtener clave API (tiene tier gratuito 15 req/min)',
-        groq:     'Obtén tu key en console.groq.com → API Keys — Ultra rápido, ~280-1000 tokens/seg',
+        deepseek: 'Obtén tu clave en <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com</a>',
+        openai:   'Obtén tu clave en <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>',
+        claude:   'Obtén tu clave en <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>',
+        gemini:   'Obtén tu clave en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> — tier gratuito disponible',
+        groq:     'Obtén tu clave en <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a>',
+        mistral:  'Obtén tu clave en <a href="https://console.mistral.ai/api-keys" target="_blank">console.mistral.ai</a>',
     };
 
-    // Auto-fill model when provider changes
-    $('#wcfm_ai_provider_select').on('change', function () {
-        var provider = $(this).val();
-        if (defaultModels[provider]) {
-            $('#wcfm_ai_model_input').val(defaultModels[provider]);
+    $(function () {
+        var $providerSelect = $('#wcfm_ai_provider_select');
+        var $modelInput     = $('#wcfm_ai_model_input');
+        var $keyHint        = $('#wcfm_ai_key_hint');
+        var $testBtn        = $('#wcfm_ai_test_btn');
+        var $testResult     = $('#wcfm_ai_test_result');
+
+        // Update model & hint when provider changes
+        $providerSelect.on('change', function () {
+            var provider = $(this).val();
+            if (defaultModels[provider]) {
+                $modelInput.val(defaultModels[provider]);
+            }
+            if (keyHints[provider]) {
+                $keyHint.html(keyHints[provider]);
+            }
+        });
+
+        // Show hint for current provider on load
+        var currentProvider = $providerSelect.val();
+        if (keyHints[currentProvider]) {
+            $keyHint.html(keyHints[currentProvider]);
         }
-        if (keyHints[provider]) {
-            $('#wcfm_ai_key_hint').text(keyHints[provider]);
-        }
-    });
 
-    // Test connection
-    $('#wcfm_ai_test_btn').on('click', function () {
-        var $btn    = $(this);
-        var $result = $('#wcfm_ai_test_result');
+        // Test connection
+        $testBtn.on('click', function () {
+            $testBtn.prop('disabled', true).text('Probando…');
+            $testResult.hide();
 
-        $btn.prop('disabled', true).text('🔄 Probando…');
-        $result.removeClass('success error').html('Conectando con la IA…').show();
-
-        $.ajax({
-            url:    wcfmAIAdmin.restUrl,
-            method: 'GET',
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader('X-WP-Nonce', wcfmAIAdmin.nonce);
-            },
-            success: function (res) {
-                if (res.success) {
-                    $result.addClass('success').html(
-                        '✅ <strong>' + res.message + '</strong>'
-                        + (res.sample ? '<br/><em style="font-size:12px;color:#555">"' + res.sample + '"</em>' : '')
-                        + (res.tokens ? '<br/><small>Tokens usados en prueba: ' + res.tokens + '</small>' : '')
-                    );
-                } else {
-                    $result.addClass('error').html('❌ ' + (res.message || 'Error desconocido'));
+            $.ajax({
+                url:        wcfmAIAdmin.restUrl + 'test',
+                method:     'GET',
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', wcfmAIAdmin.nonce);
+                },
+                success: function (res) {
+                    $testResult
+                        .removeClass('notice-error notice-success')
+                        .addClass('notice notice-success')
+                        .html('<strong>✓ ' + res.message + '</strong>' +
+                              (res.sample ? '<br><em>' + res.sample + '</em>' : '') +
+                              (res.tokens ? '<br>Tokens usados: ' + res.tokens : ''))
+                        .show();
+                },
+                error: function (xhr) {
+                    var msg = 'Error de conexión';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    $testResult
+                        .removeClass('notice-error notice-success')
+                        .addClass('notice notice-error')
+                        .html('<strong>✗ ' + msg + '</strong>')
+                        .show();
+                },
+                complete: function () {
+                    $testBtn.prop('disabled', false).text('Probar conexión');
                 }
-            },
-            error: function (xhr) {
-                var msg = xhr.responseJSON && xhr.responseJSON.message
-                        ? xhr.responseJSON.message
-                        : 'Error de conexión (HTTP ' + xhr.status + ')';
-                $result.addClass('error').html('❌ ' + msg);
-            },
-            complete: function () {
-                $btn.prop('disabled', false).text('🔌 Probar conexión');
-            },
+            });
         });
     });
 

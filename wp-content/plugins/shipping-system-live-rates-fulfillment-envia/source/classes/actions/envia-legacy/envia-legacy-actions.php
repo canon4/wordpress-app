@@ -12,7 +12,7 @@ trait Envia_Legacy_Actions {
 			'data',
 			array(
 				'ajaxurl'   => admin_url( 'admin-ajax.php' ),
-				'viewMode'  => \Enviacom::uses_block_checkout() ? 'standard' : get_option( 'woocommerce_envia_shipping_settings' )['displayPickUp'],
+				'viewMode'  => \Enviacom::uses_block_checkout() ? 'standard' : ( get_option( 'woocommerce_envia_shipping_settings' )['displayPickUp'] ?? 'list' ),
 				'nonce'     => $nonce,
 				'ratesIn'   => $ratesIn,
 			)
@@ -26,7 +26,7 @@ trait Envia_Legacy_Actions {
 
 	public static function action_after_shipping_rate( $method, $index ) {
 		$nonce  = ! isset( $nonce ) ? wp_create_nonce( 'my-nonce' ) : $nonce;
-		$labels = get_option( 'woocommerce_envia_shipping_settings' )['useLabels'];
+		$labels = get_option( 'woocommerce_envia_shipping_settings' )['useLabels'] ?? 'no';
 		if ( 'envia_shipping' == $method->method_id || 'envia_pickup' == $method->method_id ) {
 			if ( 'yes' == $labels ) {
 				echo "<div class='rate-content'><div class= 'envia-shipping-complement-div'>" . PHP_EOL;
@@ -34,13 +34,15 @@ trait Envia_Legacy_Actions {
 				echo '</div>' . PHP_EOL;
 				echo '</div>' . PHP_EOL;
 			}
-			$methodSelected    = WC()->session->get( 'chosen_shipping_methods' )[0];
+			$chosenMethods     = WC()->session->get( 'chosen_shipping_methods' );
+			$methodSelected    = ( is_array( $chosenMethods ) && isset( $chosenMethods[0] ) ) ? $chosenMethods[0] : '';
 			$branchSelected = WC()->session->get( 'branch_selected' );
-			$viewMode =  get_option( 'woocommerce_envia_shipping_settings' )['displayPickUp'];
+			$viewMode = get_option( 'woocommerce_envia_shipping_settings' )['displayPickUp'] ?? 'list';
 			if ( 'envia_pickup' != $method->method_id ) {
-				if ( ! is_null( $method->meta_data['branches'] ) && $methodSelected == $method->id && 'custom' == $viewMode ) {
+				$branches = $method->meta_data['branches'] ?? null;
+				if ( ! is_null( $branches ) && $methodSelected == $method->id && 'custom' == $viewMode ) {
 					echo "<select class='pick-up-location' onChange='getCustomOptionRate(this)' value='" . esc_html( $nonce ) . "'>" . PHP_EOL;
-					foreach ( $method->meta_data['branches'] as $key => $value ) {
+					foreach ( $branches as $key => $value ) {
 						if ( 0 == $key ) {
 							echo "<option value='none'> Select a " . esc_html( ucfirst( $method->meta_data['carrier'] ) ) . ' pick-point </option>';
 							$key = -1;
@@ -60,7 +62,7 @@ trait Envia_Legacy_Actions {
 
 	public static function afterFinishOrder( $order_id ) {
 		$lastBranch = isset( WC()->session->branch_selected ) ? WC()->session->branch_selected : null;
-		if ( 'custom' == get_option( 'woocommerce_envia_shipping_settings' )['displayPickUp'] ) {
+		if ( 'custom' == ( get_option( 'woocommerce_envia_shipping_settings' )['displayPickUp'] ?? 'list' ) ) {
 			$order = wc_get_order( $order_id );
 			$shippingItemId = array_keys( $order->get_items( 'shipping' ) )[0];
 			if ( ! is_null( $shippingItemId ) ) {

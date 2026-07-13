@@ -1,91 +1,109 @@
-/**
- * WCFM AI Assistant v1.1 — Modal script.
- */
+/* WCFM AI Assistant — v1.1 */
 (function ($) {
     'use strict';
 
-    /* -------------------------------------------------------
-       Modal open / close
-    ------------------------------------------------------- */
+    var $overlay, $modal, $generateBtn, $progress, $progressFill, $errorMsg,
+        $emptyState, $resultPanel;
+
+    /* ------------------------------------------------------------------ */
+    /*  Init                                                               */
+    /* ------------------------------------------------------------------ */
+    $(function () {
+        $overlay      = $('#wcfm-ai-overlay');
+        $modal        = $('.wcfm-ai-modal');
+        $generateBtn  = $('#wcfm-ai-generate-btn');
+        $progress     = $('#wcfm-ai-progress');
+        $progressFill = $progress.find('.wcfm-ai-progress-fill');
+        $errorMsg     = $('#wcfm-ai-error-msg');
+        $emptyState   = $('#wcfm-ai-empty-state');
+        $resultPanel  = $('#wcfm-ai-result-panel');
+
+        // Open
+        $(document).on('click', '#wcfm-ai-open-btn', openModal);
+
+        // Close
+        $('#wcfm-ai-close-btn').on('click', closeModal);
+        $overlay.on('click', function (e) {
+            if ($(e.target).is('#wcfm-ai-overlay')) closeModal();
+        });
+        $(document).on('keydown', function (e) {
+            if (e.key === 'Escape' && $overlay.is(':visible')) closeModal();
+        });
+
+        // Tabs
+        $(document).on('click', '.wcfm-ai-rtab', function () {
+            var tab = $(this).data('tab');
+            $('.wcfm-ai-rtab').removeClass('active');
+            $(this).addClass('active');
+            $('.wcfm-ai-tab-panel').removeClass('active');
+            $('#' + tab).addClass('active');
+        });
+
+        // Generate / Regenerate
+        $generateBtn.on('click', doGenerate);
+        $('#wcfm-ai-regenerate-btn').on('click', doGenerate);
+
+        // Apply
+        $('#wcfm-ai-apply-all-btn').on('click', applyAll);
+        $('#wcfm-ai-apply-excerpt-btn').on('click', applyExcerpt);
+
+        // SEO char counters
+        $('#wai_r_seo_titulo').on('input', function () {
+            $('#cnt_seo_titulo').text($(this).val().length + '/60');
+        });
+        $('#wai_r_seo_meta').on('input', function () {
+            $('#cnt_seo_meta').text($(this).val().length + '/155');
+        });
+    });
+
+    /* ------------------------------------------------------------------ */
+    /*  Modal open / close                                                 */
+    /* ------------------------------------------------------------------ */
     function openModal() {
-        $('#wcfm-ai-overlay').fadeIn(160);
+        $overlay.fadeIn(160);
         $('body').css('overflow', 'hidden');
         populateAutoFields();
-        $('#wai_materials').focus();
     }
 
     function closeModal() {
-        $('#wcfm-ai-overlay').fadeOut(140);
+        $overlay.fadeOut(140);
         $('body').css('overflow', '');
     }
 
-    // Open
-    $(document).on('click', '#wcfm-ai-open-btn', openModal);
-
-    // Close: X button
-    $(document).on('click', '#wcfm-ai-close-btn', closeModal);
-
-    // Close: click on overlay backdrop
-    $(document).on('click', '#wcfm-ai-overlay', function (e) {
-        if ($(e.target).is('#wcfm-ai-overlay')) closeModal();
-    });
-
-    // Close: Escape key
-    $(document).on('keydown', function (e) {
-        if (e.key === 'Escape' && $('#wcfm-ai-overlay').is(':visible')) closeModal();
-    });
-
-    /* -------------------------------------------------------
-       Auto-populate product name and category from the WCFM form
-    ------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /*  Auto-populate from WCFM form                                       */
+    /* ------------------------------------------------------------------ */
     function populateAutoFields() {
-        // Product name — WCFM uses name="pro_title"
-        var name = $('[name="pro_title"]').val()
-                || $('[name="post_title"]').val()
-                || $('#pro_title').val()
-                || '';
-        if (name) $('#wai_product_name').val(name);
+        // Product name
+        var name = $('[name="pro_title"]').val() || '';
+        $('#wai_product_name').val(name);
 
         // Categories — checked checkboxes
         var cats = [];
-        $('[name="product_cat[]"]:checked, input[name^="product_cat"]:checked').each(function () {
-            var label = $(this).closest('label').text().trim()
-                     || $(this).siblings('span').text().trim()
-                     || $(this).val();
+        $('[name="product_cat[]"]:checked').each(function () {
+            var label = $('label[for="' + $(this).attr('id') + '"]').text().trim();
             if (label) cats.push(label);
         });
-        if (cats.length) $('#wai_category').val(cats.join(', '));
+        // Fallback: select element
+        if (!cats.length) {
+            $('[name="product_cat[]"] option:selected').each(function () {
+                cats.push($(this).text().trim());
+            });
+        }
+        $('#wai_category').val(cats.join(', '));
     }
 
-    /* -------------------------------------------------------
-       Tabs
-    ------------------------------------------------------- */
-    $(document).on('click', '.wcfm-ai-rtab', function () {
-        var tab = $(this).data('tab');
-        $('.wcfm-ai-rtab').removeClass('active');
-        $('.wcfm-ai-rtab-content').removeClass('active');
-        $(this).addClass('active');
-        $('#' + tab).addClass('active');
-    });
-
-    /* -------------------------------------------------------
-       Character counters for SEO fields
-    ------------------------------------------------------- */
-    $(document).on('input', '#wai_r_seo_titulo', function () {
-        $('#wai_seo_titulo_count').text($(this).val().length + '/60');
-    });
-    $(document).on('input', '#wai_r_seo_meta', function () {
-        $('#wai_seo_meta_count').text($(this).val().length + '/155');
-    });
-
-    /* -------------------------------------------------------
-       Generate
-    ------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /*  Collect data                                                       */
+    /* ------------------------------------------------------------------ */
     function collect() {
+        // Also read excerpt from WCFM form for context
+        var shortDesc = $('[name="post_excerpt"]').val() || $('[name="excerpt"]').val() || '';
+
         return {
             product_name:       $('#wai_product_name').val().trim(),
             category:           $('#wai_category').val().trim(),
-            short_desc:         $('[name="excerpt"]').val() || $('#excerpt').val() || '',
+            short_desc:         shortDesc,
             materials:          $('#wai_materials').val().trim(),
             process:            $('#wai_process').val().trim(),
             benefits:           $('#wai_benefits').val().trim(),
@@ -97,164 +115,166 @@
         };
     }
 
-    function setLoading(on) {
-        $('#wcfm-ai-generate-btn').prop('disabled', on);
-        $('#wcfm-ai-btn-text').text(on ? 'Generando…' : 'Generar descripción');
-        $('#wcfm-ai-progress').toggle(on);
-        if (on) {
-            // restart CSS animation
-            var fill = $('.wcfm-ai-progress-fill')[0];
-            fill.style.animation = 'none';
-            fill.offsetHeight; // reflow
-            fill.style.animation = '';
-        }
-    }
-
-    function showError(msg) {
-        $('#wcfm-ai-error-msg').html('⚠️ ' + msg).slideDown(160);
-    }
-    function hideError() { $('#wcfm-ai-error-msg').hide(); }
-
-    function showSuccess(msg) {
-        $('#wcfm-ai-success-msg').text(msg).fadeIn(150);
-        setTimeout(function () { $('#wcfm-ai-success-msg').fadeOut(300); }, 3000);
-    }
-
+    /* ------------------------------------------------------------------ */
+    /*  Generate                                                           */
+    /* ------------------------------------------------------------------ */
     function doGenerate() {
+        hideError();
         var data = collect();
 
         if (!data.product_name) {
-            showError('Por favor ingresa el nombre del producto (campo "Nombre del producto" en el formulario).');
+            showError('El nombre del producto es requerido. Complétalo en el formulario o en el campo de arriba.');
             return;
         }
-        if (!data.materials && !data.process && !data.benefits) {
-            showError('Completa al menos uno de los campos: Materiales, Proceso o Beneficios.');
+        if (!data.materials) {
+            showError('Por favor indica los materiales del producto.');
             return;
         }
 
-        hideError();
-        setLoading(true);
-        $('#wcfm-ai-result-panel').hide();
-        $('#wcfm-ai-empty-state').show();
+        startProgress();
+        $generateBtn.prop('disabled', true);
 
         $.ajax({
-            url:         wcfmAI.restUrl,
+            url:         wcfmAI.restUrl + 'generate',
             method:      'POST',
             contentType: 'application/json',
             data:        JSON.stringify(data),
-            beforeSend:  function (xhr) { xhr.setRequestHeader('X-WP-Nonce', wcfmAI.nonce); },
-            success:  function (res) {
-                if (res && res.success && res.data) {
-                    renderResult(res.data);
-                } else {
-                    showError('Respuesta inesperada. Inténtalo de nuevo.');
-                }
+            beforeSend:  function (xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', wcfmAI.nonce);
+            },
+            success: function (res) {
+                stopProgress();
+                $generateBtn.prop('disabled', false);
+                renderResult(res);
             },
             error: function (xhr) {
+                stopProgress();
+                $generateBtn.prop('disabled', false);
                 var msg = 'Error al conectar con la IA.';
-                if (xhr.status === 429) {
-                    msg = 'Has alcanzado el límite de generaciones de este mes.';
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    msg += ' ' + xhr.responseJSON.message;
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
                 }
                 showError(msg);
-            },
-            complete: function () { setLoading(false); },
+            }
         });
     }
 
-    /* -------------------------------------------------------
-       Render result into tabs
-    ------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /*  Render result                                                      */
+    /* ------------------------------------------------------------------ */
     function renderResult(d) {
         $('#wai_r_comercial').val(d.descripcion_comercial || '');
-        $('#wai_r_historia').val(d.historia_origen        || '');
-        $('#wai_r_cultural').val(d.valor_cultural         || '');
-        $('#wai_r_curioso').val(d.dato_curioso            || '');
-        $('#wai_r_impacto').val(d.impacto_social          || '');
+        $('#wai_r_historia').val(d.historia_origen || '');
+        $('#wai_r_cultural').val(d.valor_cultural || '');
+        $('#wai_r_curioso').val(d.dato_curioso || '');
+        $('#wai_r_impacto').val(d.impacto_social || '');
+        $('#wai_r_seo_titulo').val(d.seo_titulo || '').trigger('input');
+        $('#wai_r_seo_meta').val(d.seo_meta || '').trigger('input');
+        $('#wai_r_seo_kw').val(d.seo_palabras_clave || '');
 
-        var titulo = d.seo_titulo || '';
-        var meta   = d.seo_meta   || '';
-        var kw     = Array.isArray(d.seo_palabras_clave)
-                        ? d.seo_palabras_clave.join(', ')
-                        : (d.seo_palabras_clave || '');
+        // Show first tab
+        $('.wcfm-ai-rtab').first().trigger('click');
 
-        $('#wai_r_seo_titulo').val(titulo);
-        $('#wai_r_seo_meta').val(meta);
-        $('#wai_r_seo_kw').val(kw);
-        $('#wai_seo_titulo_count').text(titulo.length + '/60');
-        $('#wai_seo_meta_count').text(meta.length + '/155');
-
-        // Activate first tab
-        $('.wcfm-ai-rtab').first().click();
-
-        $('#wcfm-ai-empty-state').hide();
-        $('#wcfm-ai-result-panel').show();
+        $emptyState.hide();
+        $resultPanel.css('display', 'flex').show();
     }
 
-    /* -------------------------------------------------------
-       Apply to WooCommerce / WCFM product form fields
-    ------------------------------------------------------- */
+    /* ------------------------------------------------------------------ */
+    /*  Apply to product form                                              */
+    /* ------------------------------------------------------------------ */
+    function applyAll() {
+        var sections = [
+            { title: 'Descripción',       id: '#wai_r_comercial' },
+            { title: 'Historia y Origen', id: '#wai_r_historia'  },
+            { title: 'Valor Cultural',    id: '#wai_r_cultural'  },
+            { title: 'Dato Curioso',      id: '#wai_r_curioso'   },
+            { title: 'Impacto Social',    id: '#wai_r_impacto'   },
+        ];
+
+        var html = '';
+        sections.forEach(function (s) {
+            var text = $(s.id).val().trim();
+            if (text) {
+                html += '<h3>' + s.title + '</h3><p>' + text.replace(/\n/g, '</p><p>') + '</p>\n';
+            }
+        });
+
+        setField('description', html);
+        applySEO();
+        closeModal();
+    }
+
+    function applyExcerpt() {
+        var text  = $('#wai_r_comercial').val().trim();
+        // Take first 2 sentences
+        var match = text.match(/[^.!?]*[.!?](\s[^.!?]*[.!?])?/);
+        var short = match ? match[0].trim() : text.substring(0, 200);
+        setField('excerpt', short);
+        closeModal();
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Field writer                                                       */
+    /* ------------------------------------------------------------------ */
     function setField(id, value) {
-        var $el = $('#' + id);
-        if (!$el.length) return;
-        $el.val(value).trigger('change');
+        var $field = $('#' + id);
+        if ($field.length) {
+            $field.val(value).trigger('change');
+        }
         // Update TinyMCE if active
-        if (window.tinymce && tinymce.get(id)) {
-            tinymce.get(id).setContent(value.replace(/\n/g, '<br/>'));
+        if (typeof tinymce !== 'undefined') {
+            var editor = tinymce.get(id);
+            if (editor) {
+                editor.setContent(value);
+                editor.save();
+            }
         }
     }
 
     function applySEO() {
         var titulo = $('#wai_r_seo_titulo').val();
         var meta   = $('#wai_r_seo_meta').val();
-        var kw     = $('#wai_r_seo_kw').val().split(',')[0].trim();
+        var kw     = $('#wai_r_seo_kw').val();
+
         // Yoast SEO
-        if ($('#yoast_wpseo_title').length) {
-            $('#yoast_wpseo_title').val(titulo).trigger('input');
-            $('#yoast_wpseo_metadesc').val(meta).trigger('input');
-            $('#yoast_wpseo_focuskw').val(kw).trigger('input');
-        }
+        $('#yoast_wpseo_title').val(titulo).trigger('input');
+        $('#yoast_wpseo_metadesc').val(meta).trigger('input');
+        $('#yoast_wpseo_focuskw').val(kw).trigger('input');
+
         // RankMath
-        if ($('#rank-math-title').length) {
-            $('#rank-math-title').val(titulo).trigger('input');
-            $('#rank-math-description').val(meta).trigger('input');
-        }
+        $('#rank-math-title').val(titulo).trigger('input');
+        $('#rank-math-description').val(meta).trigger('input');
     }
 
-    function applyAll() {
-        var comercial = $('#wai_r_comercial').val();
-        var historia  = $('#wai_r_historia').val();
-        var cultural  = $('#wai_r_cultural').val();
-        var curioso   = $('#wai_r_curioso').val();
-        var impacto   = $('#wai_r_impacto').val();
-
-        var parts = [comercial];
-        if (historia) parts.push('<h3>Historia y Origen</h3>\n' + historia);
-        if (cultural) parts.push('<h3>Valor Cultural</h3>\n' + cultural);
-        if (curioso)  parts.push('<h3>¿Sabías que…?</h3>\n' + curioso);
-        if (impacto)  parts.push('<h3>Impacto Social</h3>\n' + impacto);
-
-        setField('description', parts.join('\n\n'));
-        applySEO();
-        showSuccess('✓ Descripción completa aplicada al producto');
+    /* ------------------------------------------------------------------ */
+    /*  Progress bar                                                       */
+    /* ------------------------------------------------------------------ */
+    function startProgress() {
+        $progress.show();
+        // Restart animation by removing and re-adding class
+        $progressFill.removeClass('animating');
+        void $progressFill[0].offsetWidth; // reflow
+        $progressFill.addClass('animating');
     }
 
-    function applyExcerpt() {
-        var text = $('#wai_r_comercial').val();
-        // First 2 sentences as excerpt
-        var sentences = text.match(/[^.!?]+[.!?]+/g) || [];
-        var excerpt = sentences.slice(0, 2).join(' ').trim() || text.substring(0, 200);
-        setField('excerpt', excerpt);
-        showSuccess('✓ Descripción corta aplicada');
+    function stopProgress() {
+        $progressFill.removeClass('animating');
+        $progressFill.css('width', '100%');
+        setTimeout(function () {
+            $progress.hide();
+            $progressFill.css('width', '');
+        }, 300);
     }
 
-    /* -------------------------------------------------------
-       Event bindings
-    ------------------------------------------------------- */
-    $(document).on('click', '#wcfm-ai-generate-btn',    doGenerate);
-    $(document).on('click', '#wcfm-ai-regenerate-btn',  doGenerate);
-    $(document).on('click', '#wcfm-ai-apply-all-btn',   applyAll);
-    $(document).on('click', '#wcfm-ai-apply-excerpt-btn', applyExcerpt);
+    /* ------------------------------------------------------------------ */
+    /*  Errors                                                             */
+    /* ------------------------------------------------------------------ */
+    function showError(msg) {
+        $errorMsg.text(msg).show();
+    }
+
+    function hideError() {
+        $errorMsg.hide().text('');
+    }
 
 }(jQuery));

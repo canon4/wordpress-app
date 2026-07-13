@@ -18,6 +18,27 @@
  * @package WordPress
  */
 
+// Detectar HTTPS cuando WordPress corre detrás de un proxy SSL (ngrok, Load Balancer, etc.)
+if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' ) {
+    $_SERVER['HTTPS'] = 'on';
+}
+
+// Cargar variables del .env para entornos locales (XAMPP no las carga automáticamente)
+$_env_file = __DIR__ . '/.env';
+if ( file_exists( $_env_file ) ) {
+    foreach ( file( $_env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) as $_line ) {
+        if ( $_line[0] === '#' || strpos( $_line, '=' ) === false ) continue;
+        [ $_k, $_v ] = explode( '=', $_line, 2 );
+        $_k = trim( $_k );
+        $_v = trim( $_v );
+        if ( ! getenv( $_k ) ) {
+            putenv( "{$_k}={$_v}" );
+            $_ENV[ $_k ] = $_v;
+        }
+    }
+    unset( $_env_file, $_line, $_k, $_v );
+}
+
 // ** Database settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
 define( 'DB_NAME',     getenv('WORDPRESS_DB_NAME')     ?: 'wooecomerce' );
@@ -92,6 +113,13 @@ define( 'WP_DEBUG', false );
 if ( getenv('WP_HOME') ) {
     define( 'WP_HOME',    getenv('WP_HOME') );
     define( 'WP_SITEURL', getenv('WP_SITEURL') ?: getenv('WP_HOME') );
+}
+
+// COOKIE_DOMAIN dinámico: se ajusta al host actual (localhost o el túnel ngrok)
+if ( getenv('WP_HOME') ) {
+    define( 'COOKIE_DOMAIN', parse_url( getenv('WP_HOME'), PHP_URL_HOST ) );
+} else {
+    define( 'COOKIE_DOMAIN', 'localhost' );
 }
 
 /* That's all, stop editing! Happy publishing. */

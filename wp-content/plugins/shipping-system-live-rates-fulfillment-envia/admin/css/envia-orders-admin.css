@@ -2,12 +2,52 @@
 *
 * Envia order manager Iframe
 */
+/**
+ * El gestor se muestra en un iframe fijo al area visible para evitar el
+ * "doble scroll" (el del wp-admin + el del iframe) que rompia la navegacion.
+ * Al estar fijo, el iframe no participa del scroll de la pagina: el menu
+ * lateral de WordPress se recorre normal y el iframe queda siempre a la vista
+ * con un unico scroll (el interno de la app de Envia.com).
+ *
+ * left = ancho del menu lateral segun su estado (expandido/colapsado/movil),
+ * replicando los mismos breakpoints que usa el propio wp-admin.
+ */
 .envia-display {
-    text-align:center
+    position: fixed;
+    top: 32px;      /* debajo de la barra de administracion */
+    left: 160px;    /* a la derecha del menu expandido */
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    line-height: 0;
+    background: #f0f0f1;
+    z-index: 1;
 }
 .envia-frame {
+    display: block;
     width: 100%;
-    height: 110vh;
+    height: 100%;
+    border: 0;
+}
+
+/* Menu colapsado manualmente por el usuario */
+body.folded .envia-display {
+    left: 36px;
+}
+
+/* Auto-fold de WordPress (menu solo iconos) */
+@media only screen and (max-width: 960px) {
+    .envia-display {
+        left: 36px;
+    }
+}
+
+/* Pantallas pequenas: menu fuera de lienzo y barra admin de 46px */
+@media only screen and (max-width: 782px) {
+    .envia-display {
+        top: 46px;
+        left: 0;
+    }
 }
 
 .envia-display p {

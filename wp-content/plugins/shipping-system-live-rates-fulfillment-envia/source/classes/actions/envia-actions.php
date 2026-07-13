@@ -233,13 +233,13 @@ trait Envia_Actions {
 				throw new \Exception( $message, $code );
 			} elseif ( $response['response']['code'] >= 400 ) {
 					$response = json_decode( $response['body'], true );
-					throw new \Exception( $response['message'], $response['statusCode'] );
+					throw new \Exception( $response['message'] ?? 'API error', $response['statusCode'] ?? 400 );
 			} else {
 				$data = json_decode( $response['body'], true );
 				if ( array_key_exists( 'code', $data ) ) {
 					$code = intval( $data['code'] );
 					if ( $code >= 400 ) {
-						throw new \Exception( $response['message'], $response['statusCode'] );
+						throw new \Exception( $data['message'] ?? 'API error', $data['statusCode'] ?? $code );
 					}
 				}
 				if ( array_key_exists( 'error', $data ) ) {
