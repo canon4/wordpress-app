@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libicu-dev \
     unzip \
+    curl \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install \
         mysqli \
@@ -40,8 +41,20 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN chown -R www-data:www-data /var/www/html \
+# wp-content/uploads se monta como volumen en runtime; crearla aquí evita
+# que falte si el volumen está vacío en el primer arranque.
+RUN mkdir -p wp-content/uploads \
+    && chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type d -exec chmod 755 {} \; \
     && find /var/www/html -type f -exec chmod 644 {} \;
 
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fs http://localhost/ -o /dev/null || exit 1
+
 EXPOSE 80
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]

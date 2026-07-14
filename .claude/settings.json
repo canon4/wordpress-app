@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/xampp/htdocs/wordpress submodule status)",
+      "Bash(git -C /c/xampp/htdocs/wordpress status --short)"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+services:
+  wordpress:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+    volumes:
+      - wp_uploads:/var/www/html/wp-content/uploads
+
+volumes:
+  wp_uploads:
