@@ -8,6 +8,12 @@ services:
       - "80:80"
     volumes:
       - wp_uploads:/var/www/html/wp-content/uploads
+    networks:
+      - red_global
 
 volumes:
   wp_uploads:
+
+networks:
+  red_global:
+    external: true
