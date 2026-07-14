@@ -1,7 +1,28 @@
 .git
+.gitignore
+.gitmodules
+.github
 .env
+.env.example
 *.ps1
 *.sql
-docker-compose.yml
+*.log
+docker-compose*.yml
+docs/
+.claude/
+
+# Archivos de desarrollo/debug — NUNCA deben llegar a producción
+reset-admin.php
+debug-permalink.php
+debug-wcfm.php
+fix-permalinks.php
+fix-permalinks-hard.php
+flush-permalinks.php
+CUserscanonDesktopmes1_text.txt
+
+# Datos mutables que van en volúmenes, no en la imagen
+wp-content/uploads
 wp-content/cache
 wp-content/upgrade
+wp-content/upgrade-temp-backup
+wp-content/backup-db
