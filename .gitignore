@@ -20,6 +20,10 @@ wp-content/backup-db/
 *.log
 debug.log
 
+# Artefactos generados por graphify (grafo de conocimiento): se regeneran
+graphify-out/
+**/graphify-out/
+
 # OS
 .DS_Store
 Thumbs.db
