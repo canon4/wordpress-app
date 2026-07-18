@@ -37,6 +37,8 @@ class WCFM_AI_Assistant {
     }
 
     public function load_includes() {
+        require_once WCFM_AI_PATH . 'includes/class-ai-security.php';
+        require_once WCFM_AI_PATH . 'includes/class-ai-quota.php';
         require_once WCFM_AI_PATH . 'includes/class-ai-api.php';
         require_once WCFM_AI_PATH . 'includes/class-admin-settings.php';
         new WCFM_AI_Admin_Settings();
@@ -175,39 +177,54 @@ class WCFM_AI_Assistant {
     }
 
     public function handle_generate( WP_REST_Request $request ) {
-        $params = $request->get_json_params();
+        // A-1: lista blanca + tope de longitud por campo. Antes se reenviaba el array
+        // crudo de la peticion a la IA, sin limite: 200 KB en un campo generaban un
+        // prompt de ~50.000 tokens a costa de la cuenta del marketplace.
+        $fields = WCFM_AI_Security::sanitize_product_fields( $request->get_json_params() );
 
-        $product_name = isset( $params['product_name'] ) ? sanitize_text_field( $params['product_name'] ) : '';
-        if ( empty( $product_name ) ) {
+        if ( '' === $fields['product_name'] ) {
             return new WP_Error( 'missing_name', 'El nombre del producto es requerido.', array( 'status' => 400 ) );
         }
 
-        // Rate limiting — admins skip
-        $vendor_id = get_current_user_id();
-        if ( ! current_user_can( 'manage_options' ) ) {
-            $limit     = (int) get_option( 'wcfm_ai_vendor_monthly_limit', 50 );
-            $key       = 'wcfm_ai_count_' . $vendor_id . '_' . date( 'Y_m' );
-            $count     = (int) get_transient( $key );
-            if ( $count >= $limit ) {
+        // A-4: el contexto de la tienda lo arma el SERVIDOR a partir de la sesion.
+        // Antes viajaba en campos ocultos del formulario y se aceptaba tal cual, con
+        // lo que un vendedor podia suplantar la historia cultural de otra comunidad.
+        $vendor_id  = $this->get_current_vendor_id();
+        $store      = $this->get_vendor_context( $vendor_id );
+        $vendor_ctx = WCFM_AI_Security::sanitize_vendor_fields( array(
+            'vendor_store'      => isset( $store['store_name'] ) ? $store['store_name'] : '',
+            'vendor_desc'       => isset( $store['store_description'] ) ? $store['store_description'] : '',
+            'vendor_location'   => isset( $store['location'] ) ? $store['location'] : '',
+            'vendor_community'  => isset( $store['community_history'] ) ? $store['community_history'] : '',
+            'vendor_traditions' => isset( $store['traditions'] ) ? $store['traditions'] : '',
+        ) );
+
+        $payload = array_merge( $fields, $vendor_ctx );
+
+        // A-2: reserva ATOMICA antes de llamar a la IA (los admins no consumen cuota).
+        $user_id    = get_current_user_id();
+        $is_admin   = current_user_can( 'manage_options' );
+        $reserved   = false;
+
+        if ( ! $is_admin ) {
+            $limit = WCFM_AI_Security::sanitize_limit( get_option( 'wcfm_ai_vendor_monthly_limit', 50 ) );
+            if ( ! WCFM_AI_Quota::reserve( $user_id, $limit ) ) {
                 return new WP_Error( 'rate_limit', 'Has alcanzado el límite mensual de generaciones.', array( 'status' => 429 ) );
             }
+            $reserved = true;
         }
 
         $api    = new WCFM_AI_API();
-        $result = $api->generate( $params );
+        $result = $api->generate( $payload );
 
         if ( is_wp_error( $result ) ) {
+            if ( $reserved ) {
+                WCFM_AI_Quota::refund( $user_id ); // No se genero nada: se devuelve la cuota.
+            }
             return $result;
         }
 
-        // Increment counter
-        if ( ! current_user_can( 'manage_options' ) ) {
-            $key   = 'wcfm_ai_count_' . $vendor_id . '_' . date( 'Y_m' );
-            $count = (int) get_transient( $key );
-            set_transient( $key, $count + 1, MONTH_IN_SECONDS );
-        }
-
-        $this->log_usage( $vendor_id, $product_name, isset( $result['tokens_used'] ) ? $result['tokens_used'] : 0 );
+        $this->log_usage( $user_id, $fields['product_name'], isset( $result['tokens_used'] ) ? $result['tokens_used'] : 0 );
 
         return rest_ensure_response( $result );
     }
@@ -231,7 +248,9 @@ class WCFM_AI_Assistant {
         if ( count( $log ) > 500 ) {
             $log = array_slice( $log, -500 );
         }
-        update_option( 'wcfm_ai_usage_log', $log );
+        // autoload=false: con 500 entradas este registro llegaba a pesar bastante y
+        // se cargaba en CADA peticion de WordPress. Solo se lee en la pantalla de ajustes.
+        update_option( 'wcfm_ai_usage_log', $log, false );
     }
 }
 
