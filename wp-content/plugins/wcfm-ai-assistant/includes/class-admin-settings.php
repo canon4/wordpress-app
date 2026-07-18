@@ -22,11 +22,52 @@ class WCFM_AI_Admin_Settings {
         );
     }
 
+    /**
+     * Los cuatro ajustes se guardaban SIN sanitize_callback (A-6). Ahora cada uno
+     * valida su valor: proveedor y modelo contra patron/lista blanca, y el limite
+     * acotado a un entero razonable.
+     */
     public function register_settings() {
-        register_setting( 'wcfm_ai_settings', 'wcfm_ai_provider' );
-        register_setting( 'wcfm_ai_settings', 'wcfm_ai_api_key' );
-        register_setting( 'wcfm_ai_settings', 'wcfm_ai_model' );
-        register_setting( 'wcfm_ai_settings', 'wcfm_ai_vendor_monthly_limit' );
+        register_setting( 'wcfm_ai_settings', 'wcfm_ai_provider', array(
+            'sanitize_callback' => array( 'WCFM_AI_Security', 'sanitize_provider' ),
+        ) );
+        register_setting( 'wcfm_ai_settings', 'wcfm_ai_api_key', array(
+            'sanitize_callback' => array( $this, 'sanitize_api_key' ),
+        ) );
+        register_setting( 'wcfm_ai_settings', 'wcfm_ai_model', array(
+            'sanitize_callback' => array( $this, 'sanitize_model_setting' ),
+        ) );
+        register_setting( 'wcfm_ai_settings', 'wcfm_ai_vendor_monthly_limit', array(
+            'sanitize_callback' => array( 'WCFM_AI_Security', 'sanitize_limit' ),
+        ) );
+    }
+
+    /**
+     * Guarda la API key SIN borrarla cuando el campo llega vacio.
+     *
+     * El formulario ya no devuelve la clave al navegador (A-5), asi que un envio
+     * con el campo vacio significa "no la cambies", no "borrala".
+     *
+     * @param mixed $value
+     * @return string
+     */
+    public function sanitize_api_key( $value ) {
+        $new = trim( (string) $value );
+        if ( '' === $new ) {
+            return (string) get_option( 'wcfm_ai_api_key', '' ); // Conserva la existente.
+        }
+        return sanitize_text_field( $new );
+    }
+
+    /**
+     * Valida el modelo; si no cumple el patron, conserva el anterior.
+     *
+     * @param mixed $value
+     * @return string
+     */
+    public function sanitize_model_setting( $value ) {
+        $clean = WCFM_AI_Security::sanitize_model( $value );
+        return '' !== $clean ? $clean : (string) get_option( 'wcfm_ai_model', 'deepseek-chat' );
     }
 
     public function enqueue_admin_assets( $hook ) {
@@ -92,10 +133,27 @@ class WCFM_AI_Admin_Settings {
                             <tr>
                                 <th><label for="wcfm_ai_api_key">API Key</label></th>
                                 <td>
+                                    <?php
+                                    // A-5: la clave NO se vuelve a enviar al navegador. Antes se
+                                    // renderizaba en el atributo value de un input type=password,
+                                    // que solo la oculta visualmente: seguia legible en el codigo
+                                    // fuente de la pagina. Se deja vacio y se muestra solo el estado.
+                                    $has_key = '' !== trim( (string) $api_key );
+                                    ?>
                                     <input type="password" name="wcfm_ai_api_key" id="wcfm_ai_api_key_input"
-                                        value="<?php echo esc_attr( $api_key ); ?>"
+                                        value=""
                                         class="regular-text"
-                                        autocomplete="new-password" />
+                                        autocomplete="new-password"
+                                        placeholder="<?php echo esc_attr( $has_key ? '•••••••• clave guardada — escribe una nueva para reemplazarla' : 'Pega aquí tu API key' ); ?>" />
+                                    <p class="description">
+                                        <?php if ( $has_key ) : ?>
+                                            <strong style="color:#227122">&#10003; Configurada</strong> —
+                                            déjalo en blanco para conservarla.
+                                        <?php else : ?>
+                                            <strong style="color:#b32d2e">&#10007; Sin configurar</strong> —
+                                            el generador no funcionará hasta que la cargues.
+                                        <?php endif; ?>
+                                    </p>
                                 </td>
                             </tr>
                             <tr>

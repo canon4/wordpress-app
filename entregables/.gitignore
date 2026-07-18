@@ -1,0 +1,4 @@
+# Dependencias del conversor md -> docx (se instalan con `npm install docx`)
+node_modules/
+package-lock.json
+package.json

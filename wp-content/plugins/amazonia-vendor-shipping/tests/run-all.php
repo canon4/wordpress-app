@@ -22,6 +22,8 @@ $tests = array(
 	'test06-origin.php',
 	'test07-carrier.php',
 	'test08-label.php',
+	'test09-access.php',
+	'test10-multivendor-label.php',
 );
 
 $all_pass = true;
@@ -32,8 +34,23 @@ foreach ( $tests as $t ) {
 	$code = 0;
 	exec( escapeshellarg( $php ) . ' ' . escapeshellarg( $path ) . ' 2>&1', $out, $code );
 	$summary = trim( implode( ' | ', $out ) );
-	echo ( 0 === $code ? '[PASS] ' : '[FAIL] ' ) . str_pad( $t, 24 ) . ' → ' . $summary . "\n";
-	if ( 0 !== $code ) {
+
+	// Un test pasa solo si sale con código 0 Y emite su marca "FASE n: PASS".
+	// Exigir la marca es imprescindible: si WordPress no puede conectar a la base de
+	// datos, aborta con wp_die() ANTES de llegar al echo del test y aun así termina
+	// con código 0. Mirando solo el código de salida, esos fallos se contaban como PASS.
+	$pass = ( 0 === $code && preg_match( '/:\s*PASS\b/', $summary ) );
+
+	if ( ! $pass && '' !== $summary && false !== stripos( $summary, '<!DOCTYPE html>' ) ) {
+		// WordPress murió y volcó una página de error en vez de correr el test.
+		$summary = 'WordPress abortó antes de ejecutar el test (revisar conexión a la base de datos / wp-load.php).';
+	}
+	if ( strlen( $summary ) > 200 ) {
+		$summary = substr( $summary, 0, 200 ) . '…';
+	}
+
+	echo ( $pass ? '[PASS] ' : '[FAIL] ' ) . str_pad( $t, 24 ) . ' → ' . $summary . "\n";
+	if ( ! $pass ) {
 		$all_pass = false;
 	}
 }

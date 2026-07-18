@@ -1,7 +1,14 @@
 # Credenciales — NUNCA commitear
+# Se ignora cualquier variante (.env.local, .env.production, .env.*.bak, etc.)
+# salvo la plantilla sin secretos.
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
+
+# wp-config.php contiene los salts (AUTH_KEY, etc.). NUNCA se versiona.
+# En el repo solo va la plantilla wp-config-sample.php.
+wp-config.php
+wp-config-local.php
 
 # WordPress uploads y cache
 wp-content/uploads/
@@ -12,6 +19,10 @@ wp-content/backup-db/
 # Logs
 *.log
 debug.log
+
+# Artefactos generados por graphify (grafo de conocimiento): se regeneran
+graphify-out/
+**/graphify-out/
 
 # OS
 .DS_Store
