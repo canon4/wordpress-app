@@ -24,54 +24,42 @@ class AVS_Guide {
 	}
 
 	/**
-	 * El pedido tiene al menos un método de envío de Envia (no aplica a recogida local, etc.).
-	 */
-	private static function order_uses_envia( $order_id ) {
-		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
-			return false;
-		}
-		foreach ( $order->get_items( 'shipping' ) as $item ) {
-			if ( 'envia_shipping' === $item->get_method_id() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * El usuario actual puede ver/gestionar la guía de este pedido.
-	 * Vendedores: solo sus pedidos (aislamiento de WCFM). Admin: cualquiera.
+	 * Vendedores: solo los pedidos en los que participan. Admin: cualquiera.
+	 *
+	 * Delega en AVS_Label::can_manage_order() para que el botón y el endpoint REST compartan
+	 * una única regla de permiso (antes había dos copias de la misma lógica, y ambas fallaban
+	 * en abierto por consultar una función de WCFM que no existe).
 	 */
 	public static function can_view( $order_id ) {
-		$order_id = absint( $order_id );
-		if ( ! $order_id ) {
-			return false;
-		}
-		if ( current_user_can( 'manage_woocommerce' ) ) {
-			return true;
-		}
-		if ( function_exists( 'wcfm_is_vendor' ) && wcfm_is_vendor() ) {
-			return ! function_exists( 'wcfm_is_order_for_vendor' ) || wcfm_is_order_for_vendor( $order_id );
-		}
-		return false;
+		return class_exists( 'AVS_Label' ) && AVS_Label::can_manage_order( $order_id );
 	}
 
 	/**
 	 * Renderiza el botón (descargar o generar) en las acciones rápidas del pedido.
 	 *
+	 * Todo se resuelve para el PAQUETE DEL VENDEDOR que está mirando: en un pedido con
+	 * varios vendedores, cada uno ve únicamente su propia guía.
+	 *
 	 * @param int $order_id
 	 */
 	public static function render_button( $order_id ) {
 		$order_id = absint( $order_id );
-		if ( ! self::can_view( $order_id ) || ! self::order_uses_envia( $order_id ) ) {
+		if ( ! class_exists( 'AVS_Label' ) || ! self::can_view( $order_id ) ) {
+			return;
+		}
+
+		$vendor_id = AVS_Label::context_vendor_id();
+
+		// Solo si ESE vendedor tiene un paquete de Envia en el pedido (no aplica a recogida local).
+		if ( ! AVS_Label::has_envia_package( $order_id, $vendor_id ) ) {
 			return;
 		}
 		self::$needs_assets = true;
 
-		if ( class_exists( 'AVS_Label' ) && AVS_Label::has_label( $order_id ) ) {
-			$url      = AVS_Label::get_label_url( $order_id );
-			$tracking = AVS_Label::get_tracking( $order_id );
+		if ( AVS_Label::has_label( $order_id, $vendor_id ) ) {
+			$url      = AVS_Label::get_label_url( $order_id, $vendor_id );
+			$tracking = AVS_Label::get_tracking( $order_id, $vendor_id );
 			printf(
 				'<a href="%s" target="_blank" rel="noopener" class="button avs-label-download">%s</a>',
 				esc_url( $url ),
