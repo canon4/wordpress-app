@@ -20,6 +20,9 @@ fix-permalinks-hard.php
 flush-permalinks.php
 CUserscanonDesktopmes1_text.txt
 
+# Dependencias de build del tema — se instalan en la stage 'assets', no van al contexto
+**/node_modules
+
 # Datos mutables que van en volúmenes, no en la imagen
 wp-content/uploads
 wp-content/cache
