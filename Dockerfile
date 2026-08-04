@@ -4,9 +4,11 @@
 FROM node:20-bookworm-slim AS assets
 WORKDIR /theme
 
-# Python + fonttools/brotli para regenerar el subset de Material Symbols
+# Python + fonttools/brotli para regenerar el subset de Material Symbols.
+# python-is-python3 es necesario: en Debian solo existe el binario python3,
+# y el script `build:icons` invoca `python` a secas.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-pip \
+        python3 python3-pip python-is-python3 \
     && pip3 install --no-cache-dir --break-system-packages fonttools brotli \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
