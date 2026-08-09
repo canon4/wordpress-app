@@ -1,6 +1,6 @@
 services:
   wordpress:
-    build: .
+    image: ghcr.io/canon4/wordpress-app:${WP_IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file:
       - .env
@@ -10,6 +10,13 @@ services:
       - "127.0.0.1:8081:80"
     volumes:
       - wp_uploads:/var/www/html/wp-content/uploads
+      # El tema tiene su propio pipeline (rsync a un volumen); no se hornea en
+      # esta imagen. Ver wp-content/themes/amazonia-theme/docs/08_cicd_despliegue.md.
+      - ${AMAZONIA_THEME_PATH:-/srv/amazonia/theme/current}:/var/www/html/wp-content/themes/amazonia-theme:ro
+      # wp-config.php es gitignored y nunca viaja por el build (la imagen se
+      # construye en GitHub Actions, que solo tiene contenido trackeado en
+      # git). Se monta desde el archivo real que ya vive en el servidor.
+      - ${WP_CONFIG_PATH:-/srv/wordpress/wordpress-app/wp-config.php}:/var/www/html/wp-config.php:ro
     networks:
       - red_global
 

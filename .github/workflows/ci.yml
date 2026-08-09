@@ -1,0 +1,52 @@
+name: CI
+
+# Validación en pull request. El despliegue vive en deploy.yml.
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - master
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-imagen:
+    name: Build de la imagen Docker (sin publicar)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar docker-compose.yml
+        run: |
+          cp .env.example .env
+          docker compose config -q
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build de prueba
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  lint-php:
+    name: Lint PHP de los plugins propios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: php -l sobre los plugins propios
+        run: |
+          find wp-content/plugins/amazonia-vendor-shipping \
+               wp-content/plugins/amazonia-mercadopago-split \
+               wp-content/plugins/wcfm-ai-assistant \
+               -name '*.php' -print0 \
+            | xargs -0 -n1 -P4 php -l
