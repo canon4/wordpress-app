@@ -106,15 +106,25 @@ Replica el de MercadoLibre:
 6. **Activar** el tema *Amazonia* y los plugins desde `wp-admin`, en este orden: WooCommerce →
    WCFM → Envia → plugins propios.
 
-### Opción B — Docker (producción)
+### Opción B — Docker
 
 El `docker-compose.yml` asume una base de datos MySQL ya existente en una red Docker externa
-llamada `red_global` (no levanta MySQL por su cuenta).
+llamada `red_global` (no levanta MySQL por su cuenta). Además de `.env`, hace falta un
+`wp-config.php` real (ver Opción A, paso 4) — se monta como volumen, no se hornea en la imagen.
+
+**Producción se despliega sola.** Un push a `master` construye la imagen en GitHub Actions, la
+publica en GHCR y el servidor solo hace `pull` + recrea el contenedor — no hay que correr nada de
+esto a mano. Ver [`docs/cicd-despliegue.md`](docs/cicd-despliegue.md) para el detalle completo,
+el runbook y cómo hacer un rollback.
+
+Para levantar el contenedor **en local** (probar el `Dockerfile`, o sin acceso a la imagen
+privada de GHCR), construí la imagen vos mismo con el mismo nombre que espera el compose:
 
 ```bash
 docker network create red_global   # solo si aún no existe
-cp .env.example .env               # rellenar con los datos de producción
-docker compose up -d --build
+cp .env.example .env               # rellenar con datos de desarrollo
+docker build -t ghcr.io/canon4/wordpress-app:latest .
+docker compose up -d
 ```
 
 El sitio queda en `http://localhost:8081`. La imagen (`php:8.2-apache`) instala las extensiones
@@ -182,7 +192,8 @@ salts sean únicos por entorno.
 | Código fuente documentado | [entregables/fuentes/03-codigo-fuente-documentado.md](entregables/fuentes/03-codigo-fuente-documentado.md) |
 | Documentación técnica final | [entregables/fuentes/04-documentacion-tecnica-final.md](entregables/fuentes/04-documentacion-tecnica-final.md) |
 | Integración Mercado Pago Split | [docs/integracion-mercadopago-split.md](docs/integracion-mercadopago-split.md) |
-| Tema Amazonia | [wp-content/themes/amazonia-theme/README.md](wp-content/themes/amazonia-theme/README.md) |
+| CI/CD y despliegue de la imagen | [docs/cicd-despliegue.md](docs/cicd-despliegue.md) |
+| Tema Amazonia (con su propio pipeline de CI/CD) | [wp-content/themes/amazonia-theme/README.md](wp-content/themes/amazonia-theme/README.md) |
 
 Las fuentes en Markdown son la versión canónica; los `.docx` de `entregables/` son artefactos
 regenerables — ver [entregables/README.md](entregables/README.md).
@@ -196,7 +207,8 @@ regenerables — ver [entregables/README.md](entregables/README.md).
 - El plugin de Envia tiene **parches de compatibilidad con PHP 8** aplicados a mano (operador
   `??` sobre claves de array no definidas). **Se pierden al actualizarlo** y hay que reaplicarlos.
   El plugin propio de envíos no depende de ellos.
-- `.github/workflows/deploy.yml` está actualmente **vacío** (solo espacios en blanco): el
-  pipeline de despliegue no hace nada. Hay que reescribirlo antes de confiar en CI/CD.
+- El pipeline de CI/CD (build → GHCR → despliegue automático en `master`) ya está activo — ver
+  [`docs/cicd-despliegue.md`](docs/cicd-despliegue.md). `wp-config.php` y `.env` **no** viajan por
+  el build: se montan como volumen desde el servidor, nunca se hornean en la imagen.
 - `graphify-out/` son artefactos generados de un grafo de conocimiento; se regeneran y no se
   versionan.
