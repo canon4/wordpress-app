@@ -20,7 +20,17 @@ fix-permalinks-hard.php
 flush-permalinks.php
 CUserscanonDesktopmes1_text.txt
 
-# Dependencias de build del tema — se instalan en la stage 'assets', no van al contexto
+# El tema tiene su propio pipeline (rsync a un volumen del contenedor) y no
+# debe hornearse en esta imagen. Ver
+# wp-content/themes/amazonia-theme/docs/08_cicd_despliegue.md
+wp-content/themes/amazonia-theme
+
+# Nunca debe hornearse en la imagen: se monta como volumen. Ya está gitignored
+# (así que actions/checkout jamás lo trae), pero se declara aquí también de
+# forma explícita como documentación a prueba de cambios futuros en .gitignore.
+wp-config.php
+
+# Dependencias de build — no van al contexto
 **/node_modules
 
 # Datos mutables que van en volúmenes, no en la imagen
