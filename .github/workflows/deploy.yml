@@ -7,6 +7,21 @@ on:
   push:
     branches:
       - master
+    # Cambios que no afectan la imagen construida no deben recrear el
+    # contenedor en producción (implica un corte breve, ver docs). Lista de
+    # bloqueo, no de permiso: ante la duda, se prefiere un deploy de más a
+    # perderse uno real por un patrón mal escrito.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'entregables/**'
+      - '.claude/**'
+      - '.github/**/*.md'
+      - 'readme.html'
+      - 'license.txt'
+      - 'backup-local.ps1'
+      - '.gitignore'
+      - '.gitattributes'
   workflow_dispatch:
     inputs:
       confirm_first_deploy:
