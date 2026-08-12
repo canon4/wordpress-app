@@ -46,20 +46,28 @@ class AVS_Quote {
 		$vendor_id = absint( $vendor_id );
 		$origin_id = AVS_Origin::get_origin_id( $vendor_id );
 
-		if ( ! $origin_id || ! class_exists( '\Envia\Classes\Module\Envia_Shipping' ) ) {
+		if ( ! $origin_id ) {
+			self::log( "vendor $vendor_id sin origen registrado en Envia" );
+			return array();
+		}
+		if ( ! class_exists( '\Envia\Classes\Module\Envia_Shipping' ) ) {
+			self::log( 'la clase Envia_Shipping no existe: el plugin de Envia no está activo' );
 			return array();
 		}
 
 		$raw = self::request_raw_rates( $package, $origin_id );
 		if ( empty( $raw ) ) {
+			self::log( "vendor $vendor_id / origen $origin_id: Envia no devolvió tarifas" );
 			return array();
 		}
 
-		$rates = array();
+		$rates   = array();
+		$dropped = 0;
 		foreach ( $raw as $value ) {
 			// Solo entregas a domicilio (dropOff 0 y 1). Pickup en sucursal se maneja aparte.
 			$dropoff = isset( $value['dropOff'] ) ? (int) $value['dropOff'] : 0;
 			if ( 2 === $dropoff || 3 === $dropoff ) {
+				++$dropped;
 				continue;
 			}
 			$rate = self::map_rate( $value, $vendor_id );
@@ -67,6 +75,18 @@ class AVS_Quote {
 				$rates[ $rate->get_id() ] = $rate;
 			}
 		}
+
+		self::log(
+			sprintf(
+				'vendor %d / origen %s: %d tarifas de Envia, %d descartadas por dropOff, %d utilizables',
+				$vendor_id,
+				$origin_id,
+				count( $raw ),
+				$dropped,
+				count( $rates )
+			)
+		);
+
 		return $rates;
 	}
 
@@ -80,18 +100,47 @@ class AVS_Quote {
 	private static function request_raw_rates( $package, $origin_id ) {
 		self::$force_origin_id = (string) $origin_id;
 		$raw                   = array();
+
+		$dest = isset( $package['destination'] ) ? $package['destination'] : array();
+		self::log(
+			sprintf(
+				'cotizando origen %s → %s / %s / %s (CP "%s"), %d líneas en el carrito',
+				$origin_id,
+				$dest['city'] ?? '?',
+				$dest['state'] ?? '?',
+				$dest['country'] ?? '?',
+				$dest['postcode'] ?? '',
+				( WC()->cart ? count( WC()->cart->get_cart() ) : -1 )
+			)
+		);
+
 		try {
 			$method = new \Envia\Classes\Module\Envia_Shipping( 0 );
 			$result = $method->get_shipping_rates( $package );
 			if ( is_array( $result ) ) {
 				$raw = $result;
 			}
-		} catch ( \Exception $e ) {
+		} catch ( \Throwable $e ) {
+			// \Throwable y no \Exception: la librería de Envia puede lanzar TypeError
+			// (PHP 8) al leer la respuesta de error de la API, y eso no es una Exception.
+			self::log( 'excepción de Envia: ' . get_class( $e ) . ' — ' . $e->getMessage() . ' (código ' . $e->getCode() . ')' );
 			$raw = array();
 		} finally {
 			self::$force_origin_id = null;
 		}
 		return $raw;
+	}
+
+	/**
+	 * Registra el paso a paso de la cotización en debug.log (solo con WP_DEBUG activo).
+	 *
+	 * @param string $msg
+	 * @return void
+	 */
+	private static function log( $msg ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[AVS_Quote] ' . $msg );
+		}
 	}
 
 	/**

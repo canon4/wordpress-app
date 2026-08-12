@@ -23,7 +23,7 @@ class AVS_Checkout {
 	 * @return WC_Shipping_Rate[]
 	 */
 	public static function apply_mode_to_rates( $rates, $package ) {
-		$vendor_id = isset( $package['vendor_id'] ) ? absint( $package['vendor_id'] ) : 0;
+		$vendor_id = self::resolve_vendor_id( $package );
 		$mode      = AVS_Config::get_mode( $vendor_id );
 		$fixed     = AVS_Config::get_fixed_rate( $vendor_id );
 		$allowed   = AVS_Config::allowed_carriers( $vendor_id );
@@ -38,10 +38,12 @@ class AVS_Checkout {
 			}
 		}
 
+		$envia_before = 0;
 		foreach ( $rates as $key => $rate ) {
 			if ( 'envia_shipping' !== $rate->get_method_id() ) {
 				continue;
 			}
+			++$envia_before;
 
 			// Transportadora por vendedor: el cliente solo ve la(s) transportadora(s) permitida(s).
 			$meta    = $rate->get_meta_data();
@@ -75,7 +77,60 @@ class AVS_Checkout {
 			$rate->add_meta_data( '_avs_mode', $mode );
 		}
 
+		if ( $envia_before > 0 && ! self::has_envia_rate( $rates ) ) {
+			self::log(
+				sprintf(
+					'vendor %d: las %d tarifas de Envia se descartaron por transportadora (permitidas: %s)',
+					$vendor_id,
+					$envia_before,
+					$allowed ? implode( ', ', $allowed ) : 'todas'
+				)
+			);
+		} elseif ( 0 === $envia_before ) {
+			self::log( sprintf( 'vendor %d: el paquete llegó sin ninguna tarifa de Envia', $vendor_id ) );
+		}
+
 		return $rates;
+	}
+
+	/**
+	 * vendor_id del paquete. WCFM solo lo incluye cuando el vendedor tiene activado su
+	 * propio envío; si falta, lo deducimos del autor del primer producto del paquete
+	 * para que el envío por vendedor siga funcionando igual.
+	 *
+	 * @param array $package
+	 * @return int
+	 */
+	private static function resolve_vendor_id( $package ) {
+		if ( ! empty( $package['vendor_id'] ) ) {
+			return absint( $package['vendor_id'] );
+		}
+
+		$contents = isset( $package['contents'] ) ? (array) $package['contents'] : array();
+		foreach ( $contents as $item ) {
+			$product_id = isset( $item['product_id'] ) ? absint( $item['product_id'] ) : 0;
+			if ( ! $product_id ) {
+				continue;
+			}
+			$author = absint( get_post_field( 'post_author', $product_id ) );
+			if ( $author ) {
+				return $author;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Registra en debug.log por qué un paquete se quedó sin tarifas (solo con WP_DEBUG).
+	 *
+	 * @param string $msg
+	 * @return void
+	 */
+	private static function log( $msg ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[AVS_Checkout] ' . $msg );
+		}
 	}
 
 	/**
