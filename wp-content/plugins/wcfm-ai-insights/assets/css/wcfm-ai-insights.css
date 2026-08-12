@@ -1,0 +1,48 @@
+.wcfm-ai-insights-wrap .wcfm-ai-insights-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin: 16px 0;
+}
+
+.wcfm-ai-insights-wrap .wcfm-ai-insights-controls label {
+	font-weight: 600;
+	margin-left: 8px;
+}
+
+.wcfm-ai-insights-wrap td.positive {
+	color: #227122;
+	font-weight: 600;
+}
+
+.wcfm-ai-insights-wrap td.negative {
+	color: #b32d2e;
+	font-weight: 600;
+}
+
+.wcfm-ai-insights-wrap .wcfm-ai-rec-card {
+	border: 1px solid #ddd;
+	border-left: 4px solid #2271b1;
+	border-radius: 4px;
+	padding: 12px 16px;
+	margin-bottom: 10px;
+	background: #fff;
+}
+
+.wcfm-ai-insights-wrap .wcfm-ai-rec-card.confidence-baja {
+	border-left-color: #dba617;
+}
+
+.wcfm-ai-insights-wrap .wcfm-ai-rec-card h4 {
+	margin: 0 0 4px 0;
+}
+
+.wcfm-ai-insights-wrap .wcfm-ai-rec-card .rationale {
+	color: #555;
+	font-size: 13px;
+}
+
+.wcfm-ai-insights-wrap .wcfm-ai-risk-list {
+	margin: 0 0 16px 0;
+}
