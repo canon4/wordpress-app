@@ -305,28 +305,10 @@ class AVS_Origin {
 			$status = __( 'Completa la dirección de tu tienda para poder cobrar envíos con Envia.', 'amazonia-vendor-shipping' );
 		}
 		?>
-		<style>
-			#avs-origin-sync {
-				display: inline-flex;
-				align-items: center;
-				gap: 6px;
-				background: #16a34a;
-				color: #fff;
-				border: none;
-				border-radius: 6px;
-				padding: 8px 16px;
-				font-size: 13px;
-				font-weight: 600;
-				cursor: pointer;
-				transition: background .15s ease;
-			}
-			#avs-origin-sync:hover:not(:disabled) { background: #15803d; }
-			#avs-origin-sync:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
-		</style>
 		<div id="avs-origin-box" style="position:fixed;left:16px;bottom:16px;z-index:99998;max-width:320px;background:#fff;border:1px solid #dcdcde;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:12px 14px;font-size:13px;line-height:1.4">
 			<strong><?php esc_html_e( 'Origen de envío (Envia)', 'amazonia-vendor-shipping' ); ?></strong>
 			<p id="avs-origin-status" style="margin:6px 0 8px"><?php echo esc_html( $status ); ?></p>
-			<button type="button" id="avs-origin-sync" <?php disabled( ! $complete ); ?>><?php esc_html_e( 'Sincronizar con Envia', 'amazonia-vendor-shipping' ); ?></button>
+			<button type="button" id="avs-origin-sync" class="button" <?php disabled( ! $complete ); ?>><?php esc_html_e( 'Sincronizar con Envia', 'amazonia-vendor-shipping' ); ?></button>
 		</div>
 		<script>
 		( function () {
