@@ -291,6 +291,13 @@ class AVS_Origin {
 		if ( function_exists( 'is_wcfm_page' ) && ! is_wcfm_page() ) {
 			return;
 		}
+		// El dashboard entero (Pedidos, Productos, Reportes, Ajustes...) pasa el
+		// chequeo is_wcfm_page(), así que sin esto el botón aparecía en TODAS las
+		// pantallas del panel. Se acota a la pestaña de Ajustes, que es donde
+		// vive la dirección de la tienda que este botón sincroniza.
+		if ( function_exists( 'is_wcfm_endpoint_url' ) && ! is_wcfm_endpoint_url( 'wcfm-settings' ) ) {
+			return;
+		}
 
 		$vendor_id  = absint( apply_filters( 'wcfm_current_vendor_id', get_current_user_id() ) );
 		$origin_id  = self::get_origin_id( $vendor_id );
