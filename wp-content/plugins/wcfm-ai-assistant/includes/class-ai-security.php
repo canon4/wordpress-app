@@ -161,8 +161,13 @@ class WCFM_AI_Security {
 		if ( '' === $v ) {
 			return '';
 		}
-		// Letras, números, punto, guion y guion bajo. Sin barras, espacios ni '..'.
-		return preg_match( '/^[A-Za-z0-9._-]{1,64}$/', $v ) ? $v : '';
+		// Letras, números, punto, guion, guion bajo y barra (para IDs con prefijo de
+		// proveedor tipo "openai/gpt-oss-120b"). Sin espacios ni '..', que es lo que
+		// realmente importa para evitar path traversal en la URL de Gemini (A-7).
+		if ( ! preg_match( '/^[A-Za-z0-9._\/-]{1,128}$/', $v ) ) {
+			return '';
+		}
+		return ( false === strpos( $v, '..' ) ) ? $v : '';
 	}
 
 	/**
