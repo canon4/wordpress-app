@@ -58,6 +58,188 @@ class WCFM_AI_API {
         }
     }
 
+    /**
+     * Consulta el endpoint de listado de modelos del proveedor indicado usando
+     * la API key YA GUARDADA (no la que el admin este escribiendo sin guardar
+     * todavia, para no tener que pasear una clave nueva por el JS antes de
+     * persistirla). Devuelve una lista normalizada [{id, label}, ...] filtrada
+     * a modelos de texto/chat, o WP_Error si falla la consulta.
+     *
+     * @param string $provider
+     * @return array|WP_Error
+     */
+    public function list_models( $provider ) {
+        if ( ! class_exists( 'WCFM_AI_Security' ) || ! in_array( $provider, WCFM_AI_Security::allowed_providers(), true ) ) {
+            return new WP_Error( 'invalid_provider', 'Proveedor no reconocido.' );
+        }
+        if ( '' === trim( (string) $this->api_key ) ) {
+            return new WP_Error( 'no_api_key', 'Configura y guarda tu API key antes de listar los modelos.' );
+        }
+
+        switch ( $provider ) {
+            case 'groq':
+                return $this->fetch_models_openai_compatible( 'https://api.groq.com/openai/v1/models', function ( $m ) {
+                    $in  = isset( $m['input_modalities'] ) ? $m['input_modalities'] : array( 'text' );
+                    $out = isset( $m['output_modalities'] ) ? $m['output_modalities'] : array( 'text' );
+                    if ( isset( $m['active'] ) && ! $m['active'] ) {
+                        return null;
+                    }
+                    if ( ! in_array( 'text', $in, true ) || ! in_array( 'text', $out, true ) ) {
+                        return null;
+                    }
+                    if ( false !== strpos( $m['id'], 'guard' ) ) {
+                        return null;
+                    }
+                    return isset( $m['name'] ) ? $m['name'] : $m['id'];
+                } );
+
+            case 'openai':
+                $skip = array( 'embedding', 'whisper', 'tts', 'dall-e', 'moderation', 'davinci', 'babbage', 'audio' );
+                return $this->fetch_models_openai_compatible( 'https://api.openai.com/v1/models', function ( $m ) use ( $skip ) {
+                    $id = $m['id'];
+                    foreach ( $skip as $needle ) {
+                        if ( false !== strpos( $id, $needle ) ) {
+                            return null;
+                        }
+                    }
+                    return $id;
+                } );
+
+            case 'deepseek':
+                return $this->fetch_models_openai_compatible( 'https://api.deepseek.com/v1/models', function ( $m ) {
+                    return $m['id'];
+                } );
+
+            case 'mistral':
+                return $this->fetch_models_openai_compatible( 'https://api.mistral.ai/v1/models', function ( $m ) {
+                    if ( isset( $m['capabilities']['completion_chat'] ) && ! $m['capabilities']['completion_chat'] ) {
+                        return null;
+                    }
+                    return $m['id'];
+                } );
+
+            case 'claude':
+                return $this->fetch_models_claude();
+
+            case 'gemini':
+                return $this->fetch_models_gemini();
+        }
+
+        return new WP_Error( 'invalid_provider', 'Proveedor no reconocido.' );
+    }
+
+    /**
+     * Helper compartido para proveedores con formato de listado estilo OpenAI
+     * ({"data":[{"id":...}, ...]}). $label_cb recibe cada modelo crudo y
+     * devuelve la etiqueta a mostrar, o null para descartarlo del listado.
+     *
+     * @param string   $url
+     * @param callable $label_cb
+     * @return array|WP_Error
+     */
+    private function fetch_models_openai_compatible( $url, $label_cb ) {
+        $response = wp_remote_get( $url, array(
+            'headers' => array( 'Authorization' => 'Bearer ' . $this->api_key ),
+            'timeout' => 20,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( $code !== 200 ) {
+            $msg = isset( $data['error']['message'] ) ? $data['error']['message'] : "HTTP $code";
+            return new WP_Error( 'api_error', $msg );
+        }
+
+        $rows = isset( $data['data'] ) && is_array( $data['data'] ) ? $data['data'] : array();
+        $out  = array();
+        foreach ( $rows as $m ) {
+            if ( ! isset( $m['id'] ) ) {
+                continue;
+            }
+            $label = call_user_func( $label_cb, $m );
+            if ( null === $label ) {
+                continue;
+            }
+            $out[] = array( 'id' => $m['id'], 'label' => $label );
+        }
+        usort( $out, function ( $a, $b ) {
+            return strcasecmp( $a['id'], $b['id'] );
+        } );
+        return $out;
+    }
+
+    private function fetch_models_claude() {
+        $response = wp_remote_get( 'https://api.anthropic.com/v1/models', array(
+            'headers' => array(
+                'x-api-key'         => $this->api_key,
+                'anthropic-version' => '2023-06-01',
+            ),
+            'timeout' => 20,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( $code !== 200 ) {
+            $msg = isset( $data['error']['message'] ) ? $data['error']['message'] : "HTTP $code";
+            return new WP_Error( 'api_error', $msg );
+        }
+
+        $rows = isset( $data['data'] ) && is_array( $data['data'] ) ? $data['data'] : array();
+        $out  = array();
+        foreach ( $rows as $m ) {
+            if ( ! isset( $m['id'] ) ) {
+                continue;
+            }
+            $out[] = array( 'id' => $m['id'], 'label' => isset( $m['display_name'] ) ? $m['display_name'] : $m['id'] );
+        }
+        return $out;
+    }
+
+    private function fetch_models_gemini() {
+        $response = wp_remote_get( 'https://generativelanguage.googleapis.com/v1beta/models', array(
+            'headers' => array( 'x-goog-api-key' => $this->api_key ),
+            'timeout' => 20,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( $code !== 200 ) {
+            $msg = isset( $data['error']['message'] ) ? $data['error']['message'] : "HTTP $code";
+            return new WP_Error( 'api_error', $msg );
+        }
+
+        $rows = isset( $data['models'] ) && is_array( $data['models'] ) ? $data['models'] : array();
+        $out  = array();
+        foreach ( $rows as $m ) {
+            $methods = isset( $m['supportedGenerationMethods'] ) ? $m['supportedGenerationMethods'] : array();
+            if ( ! in_array( 'generateContent', $methods, true ) ) {
+                continue;
+            }
+            $name = isset( $m['name'] ) ? $m['name'] : '';
+            $id   = 0 === strpos( $name, 'models/' ) ? substr( $name, 7 ) : $name;
+            if ( '' === $id ) {
+                continue;
+            }
+            $out[] = array( 'id' => $id, 'label' => isset( $m['displayName'] ) ? $m['displayName'] : $id );
+        }
+        return $out;
+    }
+
     public function test_connection() {
         $sample_data = array(
             'product_name' => 'Tapiz de prueba',
