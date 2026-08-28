@@ -287,9 +287,19 @@ PROMPT;
                 array( 'role' => 'user', 'content' => $prompt ),
             ),
             'temperature'     => 0.75,
-            'max_tokens'      => 2000,
+            'max_tokens'      => 4096,
             'response_format' => array( 'type' => 'json_object' ),
         );
+
+        // Los modelos "reasoning" (ej. openai/gpt-oss-* en Groq) gastan parte del
+        // presupuesto de tokens en su razonamiento interno antes de escribir el JSON
+        // final; con max_tokens bajo la respuesta se corta a mitad del JSON y Groq
+        // devuelve "Failed to validate JSON". Se pide el minimo de razonamiento para
+        // dejarle mas presupuesto al JSON de salida. El parametro es ignorado sin
+        // error por modelos que no lo soportan.
+        if ( 'groq' === $this->provider ) {
+            $body['reasoning_effort'] = 'low';
+        }
 
         $response = wp_remote_post( $endpoint, array(
             'headers' => array(
