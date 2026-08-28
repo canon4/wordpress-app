@@ -22,20 +22,99 @@
 
     $(function () {
         var $providerSelect = $('#wcfm_ai_provider_select');
+        var $modelSelect    = $('#wcfm_ai_model_select');
         var $modelInput     = $('#wcfm_ai_model_input');
+        var $modelStatus    = $('#wcfm_ai_model_status');
+        var $refreshBtn     = $('#wcfm_ai_models_refresh');
+        var $manualToggle   = $('#wcfm_ai_model_manual_toggle');
         var $keyHint        = $('#wcfm_ai_key_hint');
         var $testBtn        = $('#wcfm_ai_test_btn');
         var $testResult     = $('#wcfm_ai_test_result');
 
+        // El <select> no tiene "name": su valor se copia al <input> oculto,
+        // que es el que realmente viaja en el submit del formulario.
+        $modelSelect.on('change', function () {
+            $modelInput.val($(this).val());
+        });
+
+        $manualToggle.on('change', function () {
+            var manual = $(this).is(':checked');
+            $modelInput.toggle(manual);
+            $modelSelect.toggle(!manual);
+            if (!manual) {
+                // Al volver al modo lista, que el select mande de nuevo su valor.
+                $modelInput.val($modelSelect.val());
+            }
+        });
+
+        function fetchModels(provider, preserveValue) {
+            var keep = preserveValue || $modelInput.val();
+
+            $modelStatus.removeClass('notice-error').text('Cargando modelos…');
+            $refreshBtn.prop('disabled', true);
+
+            $.ajax({
+                url:        wcfmAIAdmin.restUrl + 'models',
+                method:     'GET',
+                data:       { provider: provider },
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', wcfmAIAdmin.nonce);
+                },
+                success: function (res) {
+                    var models = (res && res.models) || [];
+                    $modelSelect.empty();
+
+                    if (!models.length) {
+                        $modelStatus.text('El proveedor no devolvió modelos disponibles.');
+                    } else {
+                        $modelStatus.text('');
+                    }
+
+                    var found = false;
+                    models.forEach(function (m) {
+                        var $opt = $('<option></option>').val(m.id).text(m.label || m.id);
+                        if (m.id === keep) {
+                            $opt.prop('selected', true);
+                            found = true;
+                        }
+                        $modelSelect.append($opt);
+                    });
+
+                    // El modelo guardado puede ya no estar en el catalogo vigente
+                    // (como paso con llama-3.3-70b-versatile): se conserva como
+                    // opcion extra para no perder la configuracion actual.
+                    if (!found && keep) {
+                        $modelSelect.prepend(
+                            $('<option></option>').val(keep).text(keep + ' (guardado, ya no está en la lista)').prop('selected', true)
+                        );
+                    }
+
+                    $modelInput.val($modelSelect.val());
+                },
+                error: function (xhr) {
+                    var msg = 'No se pudo obtener la lista de modelos.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    $modelStatus.addClass('notice-error').text('✗ ' + msg + ' Usa "Escribir manualmente".');
+                },
+                complete: function () {
+                    $refreshBtn.prop('disabled', false);
+                }
+            });
+        }
+
         // Update model & hint when provider changes
         $providerSelect.on('change', function () {
             var provider = $(this).val();
-            if (defaultModels[provider]) {
-                $modelInput.val(defaultModels[provider]);
-            }
             if (keyHints[provider]) {
                 $keyHint.html(keyHints[provider]);
             }
+            fetchModels(provider, defaultModels[provider] || '');
+        });
+
+        $refreshBtn.on('click', function () {
+            fetchModels($providerSelect.val());
         });
 
         // Show hint for current provider on load
@@ -43,6 +122,7 @@
         if (keyHints[currentProvider]) {
             $keyHint.html(keyHints[currentProvider]);
         }
+        fetchModels(currentProvider);
 
         // Test connection
         $testBtn.on('click', function () {

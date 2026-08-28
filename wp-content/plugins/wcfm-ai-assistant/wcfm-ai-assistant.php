@@ -3,7 +3,7 @@
  * Plugin Name: WCFM AI Assistant — Generador Cultural
  * Plugin URI:  https://example.com/wcfm-ai-assistant
  * Description: Genera descripciones culturales de productos artesanales con IA para vendedores WCFM.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Diego Canon
  * Requires PHP: 7.4
  * Text Domain: wcfm-ai-assistant
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WCFM_AI_VERSION', '1.1.0' );
+define( 'WCFM_AI_VERSION', '1.2.0' );
 define( 'WCFM_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WCFM_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -166,6 +166,14 @@ class WCFM_AI_Assistant {
                 return current_user_can( 'manage_options' );
             },
         ) );
+
+        register_rest_route( 'wcfm-ai/v1', '/models', array(
+            'methods'             => 'GET',
+            'callback'            => array( $this, 'handle_models' ),
+            'permission_callback' => function() {
+                return current_user_can( 'manage_options' );
+            },
+        ) );
     }
 
     public function check_vendor_permission() {
@@ -233,6 +241,18 @@ class WCFM_AI_Assistant {
         $api    = new WCFM_AI_API();
         $result = $api->test_connection();
         return rest_ensure_response( $result );
+    }
+
+    public function handle_models( WP_REST_Request $request ) {
+        $provider = WCFM_AI_Security::sanitize_provider( $request->get_param( 'provider' ) );
+        $api      = new WCFM_AI_API();
+        $result   = $api->list_models( $provider );
+
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+
+        return rest_ensure_response( array( 'models' => $result ) );
     }
 
     private function log_usage( $vendor_id, $product_name, $tokens ) {

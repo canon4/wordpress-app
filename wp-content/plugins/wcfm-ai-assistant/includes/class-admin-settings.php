@@ -157,12 +157,24 @@ class WCFM_AI_Admin_Settings {
                                 </td>
                             </tr>
                             <tr>
-                                <th><label for="wcfm_ai_model">Modelo</label></th>
+                                <th><label for="wcfm_ai_model_select">Modelo</label></th>
                                 <td>
+                                    <select id="wcfm_ai_model_select" class="regular-text">
+                                        <option value="<?php echo esc_attr( $model ); ?>" selected>
+                                            <?php echo esc_html( $model ); ?>
+                                        </option>
+                                    </select>
                                     <input type="text" name="wcfm_ai_model" id="wcfm_ai_model_input"
                                         value="<?php echo esc_attr( $model ); ?>"
-                                        class="regular-text" />
-                                    <p class="description">Nombre exacto del modelo según el proveedor seleccionado.</p>
+                                        class="regular-text" style="display:none;" />
+                                    <p>
+                                        <button type="button" id="wcfm_ai_models_refresh" class="button button-secondary">Actualizar lista</button>
+                                        <label style="margin-left:10px;font-weight:normal;">
+                                            <input type="checkbox" id="wcfm_ai_model_manual_toggle" />
+                                            Escribir manualmente
+                                        </label>
+                                    </p>
+                                    <p class="description" id="wcfm_ai_model_status"></p>
                                 </td>
                             </tr>
                             <tr>
