@@ -22,16 +22,7 @@ on:
       - 'backup-local.ps1'
       - '.gitignore'
       - '.gitattributes'
-  workflow_dispatch:
-    inputs:
-      confirm_first_deploy:
-        description: 'Confirmo que la imagen que corre ahora NO viene de ghcr.io (primer deploy) y que voy a vigilar este run en vivo.'
-        type: boolean
-        default: false
-      image_tag:
-        description: 'Tag ya publicado a re-desplegar (ej. sha-abc1234), sin reconstruir. Vacío = construir desde este commit.'
-        type: string
-        default: ''
+  workflow_dispatch: {}
 
 concurrency:
   group: deploy-imagen-produccion
@@ -39,7 +30,6 @@ concurrency:
 
 env:
   IMAGE: ghcr.io/canon4/wordpress-app
-  COMPOSE_DIR: /srv/wordpress/wordpress-app
 
 permissions:
   contents: read
@@ -48,7 +38,6 @@ permissions:
 jobs:
   build:
     name: Build y publicar en GHCR
-    if: github.event_name != 'workflow_dispatch' || inputs.image_tag == ''
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
@@ -81,94 +70,21 @@ jobs:
   deploy:
     name: Publicar en producción
     needs: build
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
     runs-on: ubuntu-latest
     environment: production
-    env:
-      TARGET_TAG: ${{ github.event.inputs.image_tag != '' && github.event.inputs.image_tag || needs.build.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Registrar el host
+      # Dokploy gestiona el servidor (compose, volúmenes, red) desde su propio
+      # dashboard. GitHub Actions ya no toca el host por SSH: solo avisa a
+      # Dokploy, vía su webhook de redeploy, de que hay imagen nueva en GHCR.
+      # El "Auto Deploy" / trigger de git en Dokploy debe estar APAGADO — si
+      # Dokploy escuchara el push directamente, dispararía antes de que este
+      # job termine de subir la imagen a GHCR.
+      - name: Disparar redeploy en Dokploy
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          curl -fsS -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}"
 
-      # docker-compose.yml vive versionado; el servidor solo aplica. Si tiene
-      # un error, se aborta aquí, antes de tocar el contenedor.
-      - name: Publicar docker-compose.yml y validar
-        run: |
-          scp docker-compose.yml "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.COMPOSE_DIR }}/docker-compose.yml"
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'REMOTE'
-          set -euo pipefail
-          cd "${{ env.COMPOSE_DIR }}"
-          docker compose config -q
-          REMOTE
-
-      # Se lee el estado REAL de Docker en el momento, no un archivo de estado aparte.
-      - name: Capturar la imagen que corre ahora mismo
-        id: prev
-        run: |
-          set -euo pipefail
-          prev=$(ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'REMOTE'
-          cd "${{ env.COMPOSE_DIR }}"
-          cid=$(docker compose ps -q wordpress || true)
-          if [ -z "$cid" ]; then echo "NONE"; exit 0; fi
-          docker inspect --format '{{.Config.Image}}' "$cid"
-          REMOTE
-          )
-          echo "image=$prev" >> "$GITHUB_OUTPUT"
-          echo "Imagen actual en producción: $prev"
-
-      - name: Verificar que hay a qué volver
-        env:
-          PREV_IMAGE: ${{ steps.prev.outputs.image }}
-        run: |
-          if [[ "$PREV_IMAGE" == "${{ env.IMAGE }}:"* ]]; then
-            echo "OK: hay una imagen previa de GHCR ($PREV_IMAGE). Rollback automático disponible."
-            exit 0
-          fi
-          echo "::warning::La imagen actual ('$PREV_IMAGE') NO viene de ${{ env.IMAGE }}. Esperable solo en el primer deploy."
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.confirm_first_deploy }}" == "true" ]]; then
-            echo "Confirmado manualmente. Se continúa SIN rollback automático."
-            exit 0
-          fi
-          echo "::error::Se aborta antes de tocar el contenedor. Si es intencional, dispara manualmente marcando 'confirm_first_deploy' y vigila el run en vivo."
-          exit 1
-
-      - name: Desplegar la imagen
-        run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'REMOTE'
-          set -euo pipefail
-          cd "${{ env.COMPOSE_DIR }}"
-          WP_IMAGE_TAG="${{ env.TARGET_TAG }}" docker compose pull wordpress
-          WP_IMAGE_TAG="${{ env.TARGET_TAG }}" docker compose up -d wordpress
-          REMOTE
-
-      - name: Esperar a que el contenedor esté healthy
-        run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'REMOTE'
-          set -euo pipefail
-          cd "${{ env.COMPOSE_DIR }}"
-          cid=$(docker compose ps -q wordpress)
-          for i in $(seq 1 30); do
-            status=$(docker inspect --format '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo "unknown")
-            if [[ "$status" == "healthy" ]]; then echo "Contenedor healthy."; exit 0; fi
-            if [[ "$status" == "unhealthy" ]]; then
-              echo "::error::El contenedor quedó unhealthy."
-              docker logs --tail 100 "$cid" || true
-              exit 1
-            fi
-            sleep 5
-          done
-          echo "::error::Timeout esperando healthy."
-          docker logs --tail 100 "$cid" || true
-          exit 1
-          REMOTE
+      - name: Esperar a que Dokploy aplique el cambio
+        run: sleep 20
 
       - name: Smoke test
         run: |
@@ -176,8 +92,8 @@ jobs:
           html=''
           for intento in 1 2 3 4 5; do
             if html=$(curl -fsS --max-time 20 "${{ secrets.SITE_URL }}"); then break; fi
-            echo "Intento $intento falló, reintentando en 5 s..."
-            sleep 5
+            echo "Intento $intento falló, reintentando en 10 s..."
+            sleep 10
           done
           if [ -z "$html" ]; then
             echo "::error::El sitio no respondió tras 5 intentos."
@@ -190,37 +106,3 @@ jobs:
             exit 1
           fi
           echo "Smoke test OK."
-
-      # Defensivo, no crítico: si alguien reinicia el contenedor a mano sin
-      # fijar WP_IMAGE_TAG (p.ej. tras un rollback, cuando 'latest' ya no
-      # coincide con lo realmente desplegado), esta línea evita que vuelva a
-      # levantar la imagen rota por defecto.
-      - name: Anotar el tag desplegado en .env del servidor
-        continue-on-error: true
-        run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'REMOTE'
-          cd "${{ env.COMPOSE_DIR }}"
-          if grep -q '^WP_IMAGE_TAG=' .env 2>/dev/null; then
-            sed -i "s|^WP_IMAGE_TAG=.*|WP_IMAGE_TAG=${{ env.TARGET_TAG }}|" .env
-          else
-            echo "WP_IMAGE_TAG=${{ env.TARGET_TAG }}" >> .env
-          fi
-          REMOTE
-
-      - name: Revertir al fallar
-        if: failure()
-        env:
-          PREV_IMAGE: ${{ steps.prev.outputs.image }}
-        run: |
-          if [[ "$PREV_IMAGE" != "${{ env.IMAGE }}:"* ]]; then
-            echo "::error::No hay una imagen ghcr.io previa a la que volver (era el primer deploy). Requiere intervención manual — ver el runbook."
-            exit 1
-          fi
-          prev_tag="${PREV_IMAGE##*:}"
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<REMOTE
-          set -euo pipefail
-          cd "${{ env.COMPOSE_DIR }}"
-          WP_IMAGE_TAG="$prev_tag" docker compose pull wordpress || true
-          WP_IMAGE_TAG="$prev_tag" docker compose up -d wordpress
-          REMOTE
-          echo "Rollback completado: producción restaurada a $PREV_IMAGE."
