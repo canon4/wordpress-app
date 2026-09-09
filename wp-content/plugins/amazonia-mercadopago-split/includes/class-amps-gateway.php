@@ -16,6 +16,9 @@ class AMPS_Gateway extends WC_Payment_Gateway {
         $this->title       = $this->get_option( 'title', 'Mercado Pago' );
         $this->description = $this->get_option( 'description', 'Paga de forma segura con Mercado Pago.' );
         $this->enabled     = $this->get_option( 'enabled' );
+        $this->icon        = defined( 'MP_PLUGIN_FILE' )
+            ? plugins_url( 'assets/images/minilogo.png', MP_PLUGIN_FILE )
+            : plugins_url( 'woocommerce-mercadopago/assets/images/minilogo.png' );
 
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, [ $this, 'process_admin_options' ] );
     }
@@ -87,8 +90,7 @@ class AMPS_Gateway extends WC_Payment_Gateway {
      * si no tiene cuenta conectada usa el token del marketplace como fallback.
      */
     private function resolve_access_token( WC_Order $order ): string {
-        // En sandbox usamos el token del marketplace para que el checkout funcione.
-        // En producción se usa el token del vendedor para el split real.
+        // En sandbox usamos el token del marketplace para que el checkout funcione sin cuentas reales.
         if ( AMPS_Settings::is_sandbox() ) {
             return AMPS_Settings::get_marketplace_token();
         }
@@ -100,7 +102,8 @@ class AMPS_Gateway extends WC_Payment_Gateway {
             return $token_data['access_token'] ?? '';
         }
 
-        return AMPS_Settings::get_marketplace_token();
+        // En producción: si el vendedor no está conectado, retornar vacío para no desviar fondos al marketplace
+        return '';
     }
 
     /**
@@ -170,12 +173,22 @@ class AMPS_Gateway extends WC_Payment_Gateway {
             'external_reference' => (string) $order->get_id(),
         ];
 
-        // En producción aplicar split: marketplace_fee + campo marketplace.
-        // En sandbox MP bloquea pagos split entre cuentas de prueba, se omite.
+        // En producción aplicar split: marketplace_fee deriva el costo total del envío a la plataforma (para pagar Envia.com)
+        // más la comisión sobre productos si está configurada (> 0%). El subtotal del producto va íntegro al vendedor.
         if ( ! AMPS_Settings::is_sandbox() ) {
-            $total      = floatval( $order->get_total() );
-            $commission = AMPS_Settings::get_commission();
-            $preference['marketplace_fee'] = round( $total * $commission / 100, 2 );
+            $shipping_total = floatval( $order->get_shipping_total() );
+            $items_total    = floatval( $order->get_subtotal() );
+            $commission_pct = AMPS_Settings::get_commission();
+
+            $platform_product_fee = ( $commission_pct > 0 )
+                ? round( $items_total * ( $commission_pct / 100 ), 2 )
+                : 0.0;
+
+            $marketplace_fee = round( $shipping_total + $platform_product_fee, 2 );
+
+            if ( $marketplace_fee > 0 ) {
+                $preference['marketplace_fee'] = $marketplace_fee;
+            }
 
             if ( $vendor_id && AMPS_OAuth::vendor_is_connected( $vendor_id ) ) {
                 $preference['marketplace'] = AMPS_Settings::get_app_id();

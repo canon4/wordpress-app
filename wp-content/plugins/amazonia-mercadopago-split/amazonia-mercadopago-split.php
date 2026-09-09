@@ -37,19 +37,33 @@ final class Amazonia_MP_Split {
         require_once AMPS_PATH . 'includes/class-amps-settings.php';
         require_once AMPS_PATH . 'includes/class-amps-oauth.php';
         require_once AMPS_PATH . 'includes/class-amps-vendor.php';
+        require_once AMPS_PATH . 'includes/class-amps-cart.php';
         require_once AMPS_PATH . 'includes/class-amps-gateway.php';
         require_once AMPS_PATH . 'includes/class-amps-webhook.php';
 
         AMPS_Settings::instance();
         AMPS_OAuth::instance();
         AMPS_Vendor::instance();
+        AMPS_Cart::instance();
         AMPS_Webhook::instance();
 
         add_filter( 'woocommerce_payment_gateways', [ $this, 'register_gateway' ] );
+        add_filter( 'woocommerce_available_payment_gateways', [ $this, 'filter_gateways' ] );
     }
 
     public function register_gateway( array $gateways ): array {
         $gateways[] = 'AMPS_Gateway';
+        return $gateways;
+    }
+
+    /**
+     * Oculta el Checkout Pro básico oficial para evitar duplicidad de "Mercado Pago"
+     * en el checkout y asegurar que todos los pagos pasen por la pasarela de Split.
+     */
+    public function filter_gateways( array $gateways ): array {
+        if ( isset( $gateways['amazonia_mp_split'] ) && isset( $gateways['woo-mercado-pago-basic'] ) ) {
+            unset( $gateways['woo-mercado-pago-basic'] );
+        }
         return $gateways;
     }
 
