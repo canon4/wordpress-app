@@ -24,6 +24,7 @@ $tests = array(
 	'test08-label.php',
 	'test09-access.php',
 	'test10-multivendor-label.php',
+	'test11-vendor-visibility.php',
 );
 
 $all_pass = true;
