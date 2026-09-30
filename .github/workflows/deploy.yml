@@ -76,12 +76,29 @@ jobs:
       # Dokploy gestiona el servidor (compose, volúmenes, red) desde su propio
       # dashboard. GitHub Actions ya no toca el host por SSH: solo avisa a
       # Dokploy, vía su webhook de redeploy, de que hay imagen nueva en GHCR.
-      # El "Auto Deploy" / trigger de git en Dokploy debe estar APAGADO — si
-      # Dokploy escuchara el push directamente, dispararía antes de que este
-      # job termine de subir la imagen a GHCR.
+      # Nota: En Dokploy "Auto Deploy" DEBE estar habilitado en el servicio
+      # para que acepte el webhook (de lo contrario retorna 400).
       - name: Disparar redeploy en Dokploy
         run: |
-          curl -fsS -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}"
+          PAYLOAD=$(jq -nc \
+            --arg ref "${{ github.ref }}" \
+            --arg sha "${{ github.sha }}" \
+            '{"ref": $ref, "after": $sha, "head_commit": {"id": $sha, "message": "Deploy via GitHub Actions"}}')
+
+          RESPONSE=$(curl -sS -L -w "\n%{http_code}" -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -H "x-github-event: push" \
+            -d "$PAYLOAD")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Respuesta de Dokploy (HTTP $HTTP_CODE): $BODY"
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "::error::Dokploy rechazó el despliegue con código $HTTP_CODE: $BODY"
+            exit 1
+          fi
 
       - name: Esperar a que Dokploy aplique el cambio
         run: sleep 20
