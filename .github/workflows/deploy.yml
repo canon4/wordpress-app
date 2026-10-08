@@ -92,15 +92,15 @@ jobs:
           set -euo pipefail
 
           # 1. Actualizar el WP_IMAGE_TAG en el archivo .env del servidor
+          # Asumiendo que el archivo .env está mapeado en /srv/wordpress/wordpress-app/.env
           ENV_FILE="/srv/wordpress/wordpress-app/.env"
           NEW_TAG="${{ steps.meta.outputs.tag }}"
 
-          if sudo grep -q "^WP_IMAGE_TAG=" "$ENV_FILE"; then
-            sudo sed -i "s/^WP_IMAGE_TAG=.*/WP_IMAGE_TAG=$NEW_TAG/" "$ENV_FILE"
+          if grep -q "^WP_IMAGE_TAG=" "$ENV_FILE"; then
+            sed -i "s/^WP_IMAGE_TAG=.*/WP_IMAGE_TAG=$NEW_TAG/" "$ENV_FILE"
           else
-            echo "WP_IMAGE_TAG=$NEW_TAG" | sudo tee -a "$ENV_FILE" > /dev/null
+            echo "WP_IMAGE_TAG=$NEW_TAG" >> "$ENV_FILE"
           fi
-
 
           echo "Variable actualizada a $NEW_TAG en el servidor."
 
