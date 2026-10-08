@@ -11,6 +11,8 @@ class AVS_Config {
 
 	const OPT_MODE             = 'avs_shipping_mode';
 	const OPT_FIXED            = 'avs_shipping_fixed_rate';
+	const OPT_MARKUP_PERCENT   = 'avs_shipping_markup_percent';
+	const OPT_MARKUP_FIXED     = 'avs_shipping_markup_fixed';
 	const OPT_DEFAULT_CARRIERS = 'avs_default_carriers';
 	const OPT_API_KEY          = 'avs_envia_api_key';
 	const OPT_API_SANDBOX      = 'avs_envia_api_sandbox';
@@ -40,6 +42,14 @@ class AVS_Config {
 
 	public static function get_global_fixed_rate() {
 		return max( 0.0, (float) get_option( self::OPT_FIXED, 0 ) );
+	}
+
+	public static function get_markup_percent() {
+		return max( 0.0, (float) get_option( self::OPT_MARKUP_PERCENT, 5.0 ) );
+	}
+
+	public static function get_markup_fixed() {
+		return max( 0.0, (float) get_option( self::OPT_MARKUP_FIXED, 1000.0 ) );
 	}
 
 	/**
@@ -117,6 +127,8 @@ class AVS_Config {
 	public static function register_settings() {
 		register_setting( 'avs_settings', self::OPT_MODE, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_mode' ) ) );
 		register_setting( 'avs_settings', self::OPT_FIXED, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_rate' ) ) );
+		register_setting( 'avs_settings', self::OPT_MARKUP_PERCENT, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_rate' ) ) );
+		register_setting( 'avs_settings', self::OPT_MARKUP_FIXED, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_rate' ) ) );
 		register_setting( 'avs_settings', self::OPT_DEFAULT_CARRIERS, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_carriers' ) ) );
 		register_setting( 'avs_settings', self::OPT_API_KEY, array( 'sanitize_callback' => 'sanitize_text_field' ) );
 		register_setting( 'avs_settings', self::OPT_API_SANDBOX, array( 'sanitize_callback' => array( __CLASS__, 'sanitize_bool' ) ) );
@@ -198,6 +210,20 @@ class AVS_Config {
 						<td>
 							<input type="number" step="0.01" min="0" name="<?php echo esc_attr( self::OPT_FIXED ); ?>" id="<?php echo esc_attr( self::OPT_FIXED ); ?>" value="<?php echo esc_attr( $fixed ); ?>" />
 							<p class="description"><?php esc_html_e( 'Solo se usa con el modo "Tarifa fija compartida": el cliente paga esta cantidad y el vendedor absorbe el resto.', 'amazonia-vendor-shipping' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="<?php echo esc_attr( self::OPT_MARKUP_PERCENT ); ?>"><?php esc_html_e( 'Margen de pasarela sobre flete (%)', 'amazonia-vendor-shipping' ); ?></label></th>
+						<td>
+							<input type="number" step="0.1" min="0" name="<?php echo esc_attr( self::OPT_MARKUP_PERCENT ); ?>" id="<?php echo esc_attr( self::OPT_MARKUP_PERCENT ); ?>" value="<?php echo esc_attr( self::get_markup_percent() ); ?>" /> %
+							<p class="description"><?php esc_html_e( 'Porcentaje adicional añadido al flete cotizado para absorber el costo de procesamiento de Mercado Pago (ej: 5%).', 'amazonia-vendor-shipping' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="<?php echo esc_attr( self::OPT_MARKUP_FIXED ); ?>"><?php esc_html_e( 'Margen fijo sobre flete (COP)', 'amazonia-vendor-shipping' ); ?></label></th>
+						<td>
+							<input type="number" step="100" min="0" name="<?php echo esc_attr( self::OPT_MARKUP_FIXED ); ?>" id="<?php echo esc_attr( self::OPT_MARKUP_FIXED ); ?>" value="<?php echo esc_attr( self::get_markup_fixed() ); ?>" />
+							<p class="description"><?php esc_html_e( 'Monto fijo en pesos añadido al flete cotizado para absorber la tarifa fija por transacción de Mercado Pago (ej: $1.000 COP).', 'amazonia-vendor-shipping' ); ?></p>
 						</td>
 					</tr>
 					<tr>

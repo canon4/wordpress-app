@@ -54,10 +54,19 @@ class AVS_Checkout {
 			$quoted = (float) $rate->get_cost();
 			$split  = avs_calc_split( $mode, $quoted, $fixed );
 
+			// Aplicar margen para absorber comisión de Mercado Pago si el cliente paga el envío
+			$customer_paid = $split['paid'];
+			if ( $customer_paid > 0 ) {
+				$markup_pct   = AVS_Config::get_markup_percent();
+				$markup_fixed = AVS_Config::get_markup_fixed();
+				$customer_paid = ( $customer_paid * ( 1 + ( $markup_pct / 100 ) ) ) + $markup_fixed;
+				$customer_paid = ceil( $customer_paid / 100 ) * 100;
+			}
+
 			// Escalar los impuestos de envío en proporción a lo que efectivamente paga el cliente.
 			$taxes = $rate->get_taxes();
 			if ( $quoted > 0 && ! empty( $taxes ) ) {
-				$factor = $split['paid'] / $quoted;
+				$factor = $customer_paid / $quoted;
 				foreach ( $taxes as $k => $t ) {
 					$taxes[ $k ] = (float) $t * $factor;
 				}
@@ -65,7 +74,7 @@ class AVS_Checkout {
 				$taxes = array();
 			}
 
-			$rate->set_cost( $split['paid'] );
+			$rate->set_cost( $customer_paid );
 			$rate->set_taxes( $taxes );
 
 			// Metas internas (prefijo "_" → WooCommerce no las muestra al cliente).
@@ -73,6 +82,7 @@ class AVS_Checkout {
 			$rate->add_meta_data( '_avs_quoted', $quoted );
 			$rate->add_meta_data( '_avs_absorbed', $split['absorbed'] );
 			$rate->add_meta_data( '_avs_mode', $mode );
+			$rate->add_meta_data( '_avs_markup_applied', max( 0.0, $customer_paid - $split['paid'] ) );
 		}
 
 		return $rates;

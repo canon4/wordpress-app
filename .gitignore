@@ -31,3 +31,16 @@ Thumbs.db
 # Respaldos comprimidos de temas
 wp-content/themes/*.rar
 wp-content/themes/*.zip
+
+# Entregables y artefactos locales (HTML compilados, scripts y fuentes locales)
+entregables/*.html
+entregables/md2html.js
+entregables/fuentes/05-manual-de-usuario.md
+
+# Scripts locales de utilidades (automatización de grabación, generación de PDFs/videos)
+scripts/*.py
+
+# Herramientas de automatización y configuración local de agentes
+.playwright-mcp/
+AGENTS.md
+

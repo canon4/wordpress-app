@@ -36,7 +36,7 @@ class AMPS_Settings {
     public function sanitize( $input ) {
         return [
             'client_secret'     => sanitize_text_field( $input['client_secret'] ?? '' ),
-            'commission_percent'=> min( 99, max( 0, floatval( $input['commission_percent'] ?? 10 ) ) ),
+            'commission_percent'=> min( 99, max( 0, floatval( $input['commission_percent'] ?? 0 ) ) ),
             'sandbox_mode'      => ! empty( $input['sandbox_mode'] ) ? 'yes' : 'no',
         ];
     }
@@ -46,6 +46,7 @@ class AMPS_Settings {
         ?>
         <div class="wrap">
             <h1>Mercado Pago Split — Amazonia</h1>
+            <p>Configuración del split de pagos directo a cada tienda y derivación de fletes para Envia.com.</p>
             <form method="post" action="options.php">
                 <?php settings_fields( 'amps_settings_group' ); ?>
                 <table class="form-table">
@@ -65,13 +66,21 @@ class AMPS_Settings {
                         </td>
                     </tr>
                     <tr>
-                        <th><label for="amps_commission">Comisión del marketplace (%)</label></th>
+                        <th><label for="amps_commission">Comisión de la plataforma sobre productos (%)</label></th>
                         <td>
                             <input type="number" id="amps_commission"
                                    name="<?php echo self::OPTION_KEY; ?>[commission_percent]"
                                    value="<?php echo esc_attr( $settings['commission_percent'] ); ?>"
                                    min="0" max="99" step="0.5" class="small-text"> %
-                            <p class="description">Porcentaje que retiene el marketplace de cada venta.</p>
+                            <p class="description">Configura <strong>0%</strong> si la plataforma no cobra comisión por productos artesanales. El vendedor recibe el 100% del valor de su producto.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Split de Envíos (Envia.com)</th>
+                        <td>
+                            <div style="background: #f0f6fc; border-left: 4px solid #009ee3; padding: 10px 15px; max-width: 650px;">
+                                <strong>Gestión automática de fletes:</strong> El valor cobrado por envío (flete cotizado + margen de pasarela) se transfiere automáticamente a la cuenta de Mercado Pago de la plataforma para pagar las guías de transporte en <strong>Envia.com</strong> mediante la tarjeta débito de Mercado Pago (Opción 1).
+                            </div>
                         </td>
                     </tr>
                     <tr>
@@ -102,7 +111,7 @@ class AMPS_Settings {
     public static function get() {
         $defaults = [
             'client_secret'      => '',
-            'commission_percent' => 10,
+            'commission_percent' => 0,
             'sandbox_mode'       => 'yes',
         ];
         return wp_parse_args( get_option( self::OPTION_KEY, [] ), $defaults );
