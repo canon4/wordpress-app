@@ -12,16 +12,16 @@ on:
     # bloqueo, no de permiso: ante la duda, se prefiere un deploy de más a
     # perderse uno real por un patrón mal escrito.
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - 'entregables/**'
-      - '.claude/**'
-      - '.github/**/*.md'
-      - 'readme.html'
-      - 'license.txt'
-      - 'backup-local.ps1'
-      - '.gitignore'
-      - '.gitattributes'
+      - "**.md"
+      - "docs/**"
+      - "entregables/**"
+      - ".claude/**"
+      - ".github/**/*.md"
+      - "readme.html"
+      - "license.txt"
+      - "backup-local.ps1"
+      - ".gitignore"
+      - ".gitattributes"
   workflow_dispatch: {}
 
 concurrency:
@@ -86,10 +86,25 @@ jobs:
       # El puerto 3000 está protegido por el firewall del VPS y no recibe tráfico
       # público de GitHub Actions. Por eso nos conectamos vía SSH y disparamos
       # el webhook localmente en el servidor, garantizando acceso directo y seguro.
-      - name: Disparar redeploy en Dokploy vía SSH
+      - name: Actualizar tag y disparar redeploy en Dokploy vía SSH
         run: |
           ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'REMOTE'
           set -euo pipefail
+
+          # 1. Actualizar el WP_IMAGE_TAG en el archivo .env del servidor
+          # Asumiendo que el archivo .env está mapeado en /srv/wordpress/wordpress-app/.env
+          ENV_FILE="/srv/wordpress/wordpress-app/.env"
+          NEW_TAG="${{ steps.meta.outputs.tag }}"
+
+          if grep -q "^WP_IMAGE_TAG=" "$ENV_FILE"; then
+            sed -i "s/^WP_IMAGE_TAG=.*/WP_IMAGE_TAG=$NEW_TAG/" "$ENV_FILE"
+          else
+            echo "WP_IMAGE_TAG=$NEW_TAG" >> "$ENV_FILE"
+          fi
+
+          echo "Variable actualizada a $NEW_TAG en el servidor."
+
+          # 2. Llamar al Webhook de Dokploy
           RESPONSE=$(curl -sS -L -w "\n%{http_code}" -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
