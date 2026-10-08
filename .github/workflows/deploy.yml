@@ -73,23 +73,24 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      # Dokploy gestiona el servidor (compose, volúmenes, red) desde su propio
-      # dashboard. GitHub Actions ya no toca el host por SSH: solo avisa a
-      # Dokploy, vía su webhook de redeploy, de que hay imagen nueva en GHCR.
-      # Nota: En Dokploy "Auto Deploy" DEBE estar habilitado en el servicio
-      # para que acepte el webhook (de lo contrario retorna 400).
-      - name: Disparar redeploy en Dokploy
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Registrar el host
         run: |
-          PAYLOAD=$(jq -nc \
-            --arg ref "${{ github.ref }}" \
-            --arg sha "${{ github.sha }}" \
-            '{"ref": $ref, "after": $sha, "head_commit": {"id": $sha, "message": "Deploy via GitHub Actions"}}')
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-          RESPONSE=$(curl -sS -L -w "\n%{http_code}" -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}" \
-            -H "Content-Type: application/json" \
-            -H "x-github-event: push" \
-            -d "$PAYLOAD")
-
+      # Dokploy gestiona el servidor (compose, volúmenes, red) en el puerto 3000.
+      # El puerto 3000 está protegido por el firewall del VPS y no recibe tráfico
+      # público de GitHub Actions. Por eso nos conectamos vía SSH y disparamos
+      # el webhook localmente en el servidor, garantizando acceso directo y seguro.
+      - name: Disparar redeploy en Dokploy vía SSH
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'REMOTE'
+          set -euo pipefail
+          RESPONSE=$(curl -sS -L -w "\n%{http_code}" -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
 
@@ -99,6 +100,7 @@ jobs:
             echo "::error::Dokploy rechazó el despliegue con código $HTTP_CODE: $BODY"
             exit 1
           fi
+          REMOTE
 
       - name: Esperar a que Dokploy aplique el cambio
         run: sleep 20
