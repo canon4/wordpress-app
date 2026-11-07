@@ -20,6 +20,11 @@ class AVS_Validation {
 		add_action( 'woocommerce_after_checkout_validation', array( __CLASS__, 'validate_postcode' ), 20, 2 );
 		add_action( 'woocommerce_after_checkout_validation', array( __CLASS__, 'validate_vendor_origin' ), 25, 2 );
 
+		// Exige en el propio formulario de Ajustes los campos mínimos para operar
+		// (los mismos que avs_vendor_address_complete() valida en el servidor): sin
+		// ellos no se puede registrar el origen en Envia ni cotizar envíos.
+		add_filter( 'wcfm_marketplace_settings_fields_address', array( __CLASS__, 'require_address_fields' ) );
+
 		// Blindaje defensivo contra bug de TypeError en WCFM shipping by country (PHP 8+)
 		add_filter( 'get_user_metadata', array( __CLASS__, 'fix_wcfm_shipping_by_country_type_error' ), 10, 4 );
 
@@ -326,6 +331,29 @@ class AVS_Validation {
 				)
 			);
 		}
+	}
+
+	/**
+	 * Marca como obligatorios, en el propio formulario, los campos de dirección que
+	 * avs_vendor_address_complete() exige para operar (calle, ciudad, departamento/estado,
+	 * país y código postal). Usa el mecanismo nativo de WCFM ('required' en
+	 * custom_attributes), que añade el asterisco rojo y bloquea el envío del formulario
+	 * en el navegador antes de llegar al servidor.
+	 *
+	 * @param array $fields Campos de la sección "Dirección de la tienda" de WCFM.
+	 * @return array
+	 */
+	public static function require_address_fields( $fields ) {
+		foreach ( array( 'street_1', 'city', 'state', 'country', 'zip' ) as $key ) {
+			if ( ! isset( $fields[ $key ] ) ) {
+				continue;
+			}
+			if ( ! isset( $fields[ $key ]['custom_attributes'] ) || ! is_array( $fields[ $key ]['custom_attributes'] ) ) {
+				$fields[ $key ]['custom_attributes'] = array();
+			}
+			$fields[ $key ]['custom_attributes']['required'] = 'required';
+		}
+		return $fields;
 	}
 
 	/**

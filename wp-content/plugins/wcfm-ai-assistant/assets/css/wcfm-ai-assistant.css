@@ -443,6 +443,34 @@
     flex-wrap: wrap;
 }
 
+/* Base button look — the WP admin "button" classes used in the markup
+   have no styles on the frontend, so define them here from scratch. */
+.wcfm-ai-apply-row .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid #d4c8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #6c3fc5;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+}
+
+.wcfm-ai-apply-row .button:hover {
+    background: #f3eeff;
+    border-color: #c5b6f0;
+}
+
+.wcfm-ai-apply-row .button:active {
+    transform: translateY(1px);
+}
+
 .wcfm-ai-apply-row .button-primary {
     background: #6c3fc5;
     border-color: #5a33a8;
@@ -451,6 +479,19 @@
 
 .wcfm-ai-apply-row .button-primary:hover {
     background: #5a33a8;
+    border-color: #5a33a8;
+}
+
+#wcfm-ai-regenerate-btn {
+    margin-left: auto;
+    background: transparent;
+    border-color: transparent;
+    color: #7c4dcc;
+}
+
+#wcfm-ai-regenerate-btn:hover {
+    background: #ede8f9;
+    border-color: #ede8f9;
 }
 
 /* ---------------------------------------------------------------

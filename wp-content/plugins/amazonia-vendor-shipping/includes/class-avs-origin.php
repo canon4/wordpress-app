@@ -22,9 +22,10 @@ class AVS_Origin {
 		// Auto-registro tras guardar los settings del vendedor (después de AVS_Config, prioridad 20).
 		add_action( 'wcfm_vendor_settings_before_update', array( __CLASS__, 'on_vendor_settings_update' ), 30, 2 );
 
-		// Botón de respaldo "Sincronizar con Envia" en el dashboard del vendedor.
+		// Botón de respaldo "Sincronizar con Envia", integrado en la sección de envío
+		// del panel de Ajustes del vendedor (después de los campos de AVS_Config, prioridad 20).
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest' ) );
-		add_action( 'wp_footer', array( __CLASS__, 'render_sync_button' ), 40 );
+		add_filter( 'wcfmmp_settings_fields_shipping', array( __CLASS__, 'add_settings_field' ), 25 );
 	}
 
 	/* ---------------------------------------------------------------------
@@ -277,33 +278,37 @@ class AVS_Origin {
 	}
 
 	/**
-	 * Botón "Sincronizar mi origen con Envia" para el vendedor, con estado actual.
-	 * Se inyecta en el footer solo en el dashboard del vendedor (evita depender del slug).
+	 * Añade el botón "Sincronizar con Envia" como campo tipo 'html' dentro de la
+	 * propia sección de envío del vendedor (en vez de un cuadro flotante aparte),
+	 * justo debajo de los campos que añade AVS_Config (prioridad 20 en el mismo filtro).
+	 *
+	 * @param array $fields Campos existentes de la sección de envío de WCFMmp.
+	 * @return array
 	 */
-	public static function render_sync_button() {
-		if ( ! function_exists( 'wcfm_is_vendor' ) || ! wcfm_is_vendor() || ! is_user_logged_in() ) {
-			return;
-		}
-		// Solo en páginas del dashboard de WCFM.
-		if ( ! function_exists( 'wcfmmp_is_store_page' ) && ! ( function_exists( 'is_wcfm_page' ) && is_wcfm_page() ) ) {
-			return;
-		}
-		if ( function_exists( 'is_wcfm_page' ) && ! is_wcfm_page() ) {
-			return;
-		}
-		// El dashboard entero (Pedidos, Productos, Reportes, Ajustes...) pasa el
-		// chequeo is_wcfm_page(), así que sin esto el botón aparecía en TODAS las
-		// pantallas del panel. Se acota a la pestaña de Ajustes, que es donde
-		// vive la dirección de la tienda que este botón sincroniza.
-		if ( function_exists( 'is_wcfm_endpoint_url' ) && ! is_wcfm_endpoint_url( 'wcfm-settings' ) ) {
-			return;
-		}
+	public static function add_settings_field( $fields ) {
+		$vendor_id = absint( apply_filters( 'wcfm_current_vendor_id', get_current_user_id() ) );
 
-		$vendor_id  = absint( apply_filters( 'wcfm_current_vendor_id', get_current_user_id() ) );
-		$origin_id  = self::get_origin_id( $vendor_id );
-		$complete   = self::is_complete( $vendor_id );
-		$nonce      = wp_create_nonce( 'wp_rest' );
-		$rest_url   = esc_url_raw( rest_url( 'avs/v1/sync-origin' ) );
+		$fields['avs_origin_sync'] = array(
+			'type'  => 'html',
+			'id'    => 'avs-origin-box',
+			'class' => 'wcfm_ele',
+			'value' => self::sync_field_html( $vendor_id ),
+		);
+
+		return $fields;
+	}
+
+	/**
+	 * Markup del estado + botón de sincronización, para insertar como campo 'html' de WCFM.
+	 *
+	 * @param int $vendor_id
+	 * @return string
+	 */
+	private static function sync_field_html( $vendor_id ) {
+		$origin_id = self::get_origin_id( $vendor_id );
+		$complete  = self::is_complete( $vendor_id );
+		$nonce     = wp_create_nonce( 'wp_rest' );
+		$rest_url  = esc_url_raw( rest_url( 'avs/v1/sync-origin' ) );
 
 		$status = $origin_id
 			? sprintf( /* translators: %s: envia address id */ __( 'Origen sincronizado (ID Envia: %s).', 'amazonia-vendor-shipping' ), esc_html( $origin_id ) )
@@ -311,8 +316,10 @@ class AVS_Origin {
 		if ( ! $complete ) {
 			$status = __( 'Completa la dirección de tu tienda para poder cobrar envíos con Envia.', 'amazonia-vendor-shipping' );
 		}
+
+		ob_start();
 		?>
-		<div id="avs-origin-box" style="position:fixed;left:16px;bottom:16px;z-index:99998;max-width:320px;background:#fff;border:1px solid #dcdcde;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:12px 14px;font-size:13px;line-height:1.4">
+		<div style="background:#faf9ff;border:1px solid #e8e0f5;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.4;margin-bottom:10px">
 			<strong><?php esc_html_e( 'Origen de envío (Envia)', 'amazonia-vendor-shipping' ); ?></strong>
 			<p id="avs-origin-status" style="margin:6px 0 8px"><?php echo esc_html( $status ); ?></p>
 			<button type="button" id="avs-origin-sync" class="button" <?php disabled( ! $complete ); ?>><?php esc_html_e( 'Sincronizar con Envia', 'amazonia-vendor-shipping' ); ?></button>
@@ -336,6 +343,7 @@ class AVS_Origin {
 		} )();
 		</script>
 		<?php
+		return ob_get_clean();
 	}
 
 	private static function log( $msg ) {
