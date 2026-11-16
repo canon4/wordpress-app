@@ -30,8 +30,9 @@ RUN apt-get update && apt-get install -y \
         xml \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache mod_rewrite for WordPress permalinks
-RUN a2enmod rewrite
+# mod_rewrite: permalinks de WordPress. mod_headers: cabeceras de seguridad
+# definidas en .htaccess.
+RUN a2enmod rewrite headers
 
 # Allow .htaccess overrides
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf

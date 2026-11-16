@@ -1,3 +1,37 @@
+# ── Endurecimiento de seguridad ─────────────────────────────────────────────
+# Bloquea cualquier archivo oculto (.env, .git*, .DS_Store, ...). Apache servía
+# /.env con 200: solo lo protegía el proxy de delante.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# XML-RPC no se usa en este sitio y es vector de fuerza bruta.
+<Files "xmlrpc.php">
+    Require all denied
+</Files>
+
+# Archivos de WordPress que revelan versión / configuración.
+<FilesMatch "^(wp-config\.php|wp-config-sample\.php|readme\.html|license\.txt)$">
+    Require all denied
+</FilesMatch>
+
+# Sin listado de directorios.
+Options -Indexes
+
+# Nunca ejecutar PHP desde uploads (un webshell subido ahí no debe correr).
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^wp-content/uploads/.*\.(php[0-9]?|phtml|phar|pht)$ - [F,L,NC]
+</IfModule>
+
+# Cabeceras de seguridad (requiere mod_headers; ver Dockerfile).
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
 # ── Amazonia Theme — Performance: Gzip + Browser Cache ──────────────────────
 
 # Compresión Gzip / Deflate
